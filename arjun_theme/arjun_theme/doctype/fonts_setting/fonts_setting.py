@@ -1,4 +1,4 @@
-# Copyright (c) 2026, Arjun Technologies and contributors
+# Copyright (c) 2026, Arjun and contributors
 # For license information, please see license.txt
 
 # import frappe

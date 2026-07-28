@@ -1,8 +1,8 @@
 app_name = "arjun_theme"
 app_title = "Arjun Theme"
-app_publisher = "Arjun Technologies"
+app_publisher = "Arjun"
 app_description = "A Frappe Theme"
-app_email = "iammusabutt@gmail.com"
+app_email = "arjuntomar941@gmail.com"
 app_license = "mit"
 
 # Apps

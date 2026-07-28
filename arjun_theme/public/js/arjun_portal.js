@@ -122,7 +122,7 @@
             const navbar = document.querySelector('.navbar');
             if (!navbar) return;
 
-            // Add navbar brand icon if none exists (matches desk DrCodeX branding)
+            // Add navbar brand icon if none exists
             const brand = navbar.querySelector('.navbar-brand');
             if (brand && !brand.querySelector('img') && !brand.querySelector('.np-brand-icon')) {
                 const brandIcon = document.createElement('span');

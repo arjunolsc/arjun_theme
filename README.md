@@ -9,7 +9,7 @@
 
 **Arjun Theme** modernizes the Frappe/ERPNext Desk experience — glassmorphism, a redesigned sidebar with animated `iconify` icons, micro-interactions, and a curated color palette.
 
-This fork is based on [naidapa_theme](https://github.com/iammusabutt/naidapa_theme) by Dr. Codex, renamed and adapted for OM Logistics, with one deliberate behavior change: **the login page is excluded from this theme**, so it never overrides a site's own custom login page (see [Login page exclusion](#-login-page-exclusion) below).
+This is a fork adapted for OM Logistics, with one deliberate behavior change: **the login page is excluded from this theme**, so it never overrides a site's own custom login page (see [Login page exclusion](#-login-page-exclusion) below).
 
 **Desk home**
 <img src="screenshots/desk-home.png" alt="Desk home screenshot" width="900" />
@@ -42,10 +42,6 @@ bench get-app https://github.com/arjunolsc/arjun_theme.git
 bench --site <sitename> install-app arjun_theme
 bench build --app arjun_theme
 ```
-
-## 🙏 Credit
-
-Original theme by **Dr. Codex** — [www.drcodex.com](https://www.drcodex.com). This fork is maintained internally for OM Logistics; please direct upstream feature requests to the original project.
 
 ## 🧑‍💻 Contributing
 

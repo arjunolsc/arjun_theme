@@ -1,7 +1,7 @@
 [project]
 name = "arjun_theme"
 authors = [
-    { name = "Arjun Technologies", email = "iammusabutt@gmail.com"}
+    { name = "Arjun", email = "arjuntomar941@gmail.com"}
 ]
 description = "A Frappe Theme"
 requires-python = ">=3.10"

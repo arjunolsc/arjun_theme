@@ -1,49 +1,51 @@
 <div align="center">
-  <h1>✨ ERPNext Desk & Portal Arjun Theme (v15)</h1>
-  <p><i>A beautifully crafted, modern glassmorphic theme for Frappe and ERPNext</i></p>
+  <h1>✨ Arjun Theme — ERPNext 15 Desk Theme</h1>
+  <p><i>A modern glassmorphic theme for Frappe / ERPNext, forked and adapted for OM Logistics</i></p>
 </div>
 
 <hr />
 
 ## 📖 Overview
 
-**Arjun Theme** is a cutting-edge aesthetic overhaul for your Frappe / ERPNext workspace. It radically modernizes your desk experience by replacing the default layout with fresh, deeply considered modern designs. It features glassmorphism, dynamic micro-animations, a modernized responsive sidebar navigation, and soft pastel interactive widgets that bring your screen to life.
+**Arjun Theme** modernizes the Frappe/ERPNext Desk experience — glassmorphism, a redesigned sidebar with animated `iconify` icons, micro-interactions, and a curated color palette.
 
-**Desk**
-<img width="1910" height="900" alt="Desk" src="https://github.com/user-attachments/assets/811c0a91-58c9-4b5b-a8f8-5575e554fff3" />
-<br>
-**Customer Portal**
-<img width="1903" height="900" alt="Portal" src="https://github.com/user-attachments/assets/a82ef505-4ec5-40eb-911d-c4fa8bcf36ce" />
-<br>
-**Login**
-<img width="1894" height="874" alt="Login" src="https://github.com/user-attachments/assets/9e3363a4-3947-40bd-a5a6-7ccfa2fa584b" />
+This fork is based on [naidapa_theme](https://github.com/iammusabutt/naidapa_theme) by Dr. Codex, renamed and adapted for OM Logistics, with one deliberate behavior change: **the login page is excluded from this theme**, so it never overrides a site's own custom login page (see [Login page exclusion](#-login-page-exclusion) below).
 
+**Desk home**
+<img src="screenshots/desk-home.png" alt="Desk home screenshot" width="900" />
+
+**Form view**
+<img src="screenshots/desk-form.png" alt="Form view screenshot" width="900" />
 
 ## 🚀 Features
 
-- **Modern Layouts & Glassmorphism:** Clean, soft translucency combined with beautifully tuned drop shadows.
-- **Dynamic Workspaces:** Fully responsive sidebar utilizing customizable animated `iconify` icons.
-- **Micro-Interactions:** Subtle hover states, uniquely colored expanding geometric orbs, and playful widget cards.
-- **Custom Color Palette:** Curated earthy, warm, and bright pastel tones inspired by premium modern web design aesthetics.
+- **Modern Layouts & Glassmorphism:** Clean, soft translucency combined with tuned drop shadows.
+- **Dynamic Workspaces:** Fully responsive sidebar with customizable animated `iconify` icons.
+- **Micro-Interactions:** Subtle hover states and polished widget cards.
+- **Custom Color Palette:** Curated tones for a modern, cohesive Desk look.
+
+## 🔒 Login page exclusion
+
+Upstream `naidapa_theme` ships its own `www/login.html` + `login.py` and site-wide `web_include_css`/`web_include_js` rules that restyle the login page along with the rest of the site. This fork removes that entirely:
+
+- No `www/login.html` / `login.py` — the login route is never overridden, so another app's custom login page (or Frappe's default) always renders untouched.
+- The remaining global CSS rules (`body`, `a`, `.alert`) are scoped with `:not([data-path="login"])`.
+- The portal JS (`arjun_portal.js`) returns immediately on any `/login` path, before any DOM changes.
+
+Desk theming (`app_include_css`/`app_include_js` — sidebar, navbar, forms, calendar, icons) is untouched from upstream. Only what the web-page hooks reach was changed.
 
 ## 🛠️ Installation
 
-You can easily install this app using the standard [bench](https://github.com/frappe/bench) CLI:
-
 ```bash
 cd frappe-bench
-bench get-app https://github.com/iammusabutt/arjun_theme.git
-bench install-app arjun_theme
+bench get-app https://github.com/arjunolsc/arjun_theme.git
+bench --site <sitename> install-app arjun_theme
+bench build --app arjun_theme
 ```
 
-## 🤝 Support & Author
+## 🙏 Credit
 
-Developed and proudly maintained by **Dr. Codex**. We are passionate about creating premium architectural solutions and state-of-the-art UI/UX improvements for the Frappe ecosystem.
-
-- 🌐 **Website:** [www.drcodex.com](https://www.drcodex.com)
-- ✉️ **Email:** [hello@drcodex.com](mailto:hello@drcodex.com)
-
-If you have any questions, need extensive customizations, or just want to chat about ERPNext capabilities, feel free to reach out to us!
+Original theme by **Dr. Codex** — [www.drcodex.com](https://www.drcodex.com). This fork is maintained internally for OM Logistics; please direct upstream feature requests to the original project.
 
 ## 🧑‍💻 Contributing
 

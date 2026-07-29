@@ -268,31 +268,31 @@ body.arjun-theme-active .sticky-top .navbar .header-toggle,
 body.arjun-theme-active .sticky-top .navbar #navbar-breadcrumbs,
 body.arjun-theme-active .sticky-top .navbar #navbar-breadcrumbs a,
 body.arjun-theme-active .sticky-top .navbar #navbar-breadcrumbs li,
-body.arjun-theme-active .sticky-top .navbar .navbar-right,
-body.arjun-theme-active .sticky-top .navbar .navbar-right a,
-body.arjun-theme-active .sticky-top .navbar .navbar-right span,
-body.arjun-theme-active .sticky-top .navbar #navbar-help,
-body.arjun-theme-active .sticky-top .navbar #navbar-help span {
+body.arjun-theme-active .sticky-top .navbar .nav-link,
+body.arjun-theme-active .sticky-top .navbar .nav-link span {
     color: #ffffff !important;
 }
 
 body.arjun-theme-active .sticky-top .navbar .header-toggle iconify-icon,
-body.arjun-theme-active .sticky-top .navbar .navbar-right svg,
-body.arjun-theme-active .sticky-top .navbar #navbar-help svg {
+body.arjun-theme-active .sticky-top .navbar .nav-link svg {
     color: #ffffff !important;
     stroke: #ffffff !important;
 }
 
-body.arjun-theme-active .sticky-top .navbar .notifications-icon,
-body.arjun-theme-active .sticky-top .navbar .notifications-seen,
-body.arjun-theme-active .sticky-top .navbar .notifications-unseen {
-    filter: brightness(0) invert(1);
+body.arjun-theme-active .sticky-top .navbar .vertical-bar {
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    background-color: rgba(255, 255, 255, 0.25) !important;
 }
 
 body.arjun-theme-active .sticky-top .navbar .search-bar,
 body.arjun-theme-active .sticky-top .navbar #navbar-search {
     background-color: #ffffff !important;
     color: #1F2937 !important;
+}
+
+body.arjun-theme-active .sticky-top .navbar .search-icon svg {
+    color: #1F2937 !important;
+    stroke: #1F2937 !important;
 }
 
 /* Navbar search: global input styles strip icon padding */

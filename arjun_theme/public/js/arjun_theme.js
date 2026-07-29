@@ -117,6 +117,7 @@
         arjun_theme.inject_navbar_toggle();
         arjun_theme.mutate_number_cards();
         arjun_theme.setup_icon_picker();
+        arjun_theme.setup_responsive_sidebar();
     };
 
     arjun_theme.mutate_number_cards = function () {
@@ -147,6 +148,34 @@
                 }
             });
         }
+    };
+
+    // Below this width, the full sidebar (icon + label) doesn't have room
+    // and labels clip mid-word. Auto-collapse to icon-only (semi-nav) —
+    // the same class the manual header-toggle button already uses, so
+    // hover-to-expand still works exactly as it does when toggled by hand.
+    arjun_theme.RESPONSIVE_SIDEBAR_BREAKPOINT = 1400;
+
+    arjun_theme.setup_responsive_sidebar = function () {
+        const apply = function () {
+            const $body = $('body');
+            const $sidebar = $('.vertical-sidebar');
+            const $icon = $('.header-toggle iconify-icon');
+            const narrow = window.innerWidth < arjun_theme.RESPONSIVE_SIDEBAR_BREAKPOINT;
+
+            if (narrow && !$sidebar.hasClass('semi-nav')) {
+                $body.addClass('sidebar-menu-opened');
+                $sidebar.addClass('semi-nav');
+                $icon.attr('icon', 'line-md:menu-fold-right');
+            } else if (!narrow && $sidebar.hasClass('semi-nav')) {
+                $body.removeClass('sidebar-menu-opened');
+                $sidebar.removeClass('semi-nav');
+                $icon.attr('icon', 'line-md:menu-fold-left');
+            }
+        };
+
+        apply();
+        $(window).off('resize.arjun_responsive_sidebar').on('resize.arjun_responsive_sidebar', apply);
     };
 
     arjun_theme.mutate_custom_elements = function () {

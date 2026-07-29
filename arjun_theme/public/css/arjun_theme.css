@@ -1269,3 +1269,29 @@ nav .app-nav .main-nav>li.active>a iconify-icon {
     stroke: #ffffff !important;
     color: #ffffff !important;
 }
+
+/* ==========================================================================
+   SEMI-NAV (icon-only) FIX — the theme's built-in semi-nav text-hiding
+   assumes labels are wrapped in their own element; Frappe's actual sidebar
+   markup is a raw text node next to the icon, so it never got hidden.
+   font-size:0 collapses the text node to nothing while the icon (which
+   uses explicit px width/height, not em) stays fully visible.
+   ========================================================================== */
+nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .menu-title span {
+    font-size: 0 !important;
+}
+
+nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)>a {
+    font-size: 0 !important;
+    justify-content: center;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)>a::after {
+    display: none !important;
+}
+
+nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)>a svg {
+    margin: 0 !important;
+}

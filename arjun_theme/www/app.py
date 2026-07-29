@@ -62,6 +62,11 @@ def get_context(context):
                 or boot.get("app_logo_url")
                 or frappe.get_hooks("app_logo_url")[-1]
             ),
+            "favicon": (
+                frappe.get_website_settings("favicon")
+                or hooks.get("website_context", {}).get("favicon")
+                or "/assets/frappe/images/frappe-favicon.svg"
+            ),
             "pages": get_desktop_pages(),
         }
     )

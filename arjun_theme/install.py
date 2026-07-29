@@ -13,6 +13,15 @@ def after_install():
             }
         ]
     })
-    
+    set_favicon()
+
 def after_migrate():
     after_install()
+
+def set_favicon():
+    """Point Website Settings at the favicon bundled with this app so the
+    browser tab icon works out of the box on any bench, with no manual
+    site configuration."""
+    favicon = "/assets/arjun_theme/images/om_favicon.png"
+    if frappe.db.get_single_value("Website Settings", "favicon") != favicon:
+        frappe.db.set_single_value("Website Settings", "favicon", favicon)

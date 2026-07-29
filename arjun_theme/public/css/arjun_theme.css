@@ -362,7 +362,6 @@ body.arjun-theme-active #freeze.grid-form {
 
 nav .app-logo {
     align-items: center;
-    justify-content: center;
     border-bottom: 1px dashed var(--border_color);
     display: flex;
     height: 56px;
@@ -370,15 +369,11 @@ nav .app-logo {
     white-space: nowrap;
     overflow: hidden;
     box-sizing: border-box;
-    /* The OM Logistics logo has white text elements — needs a dark
-       background to read, same navy as the login page. */
-    background: #10225F !important;
 }
 
 nav.vertical-sidebar .app-logo .logo {
     display: flex;
     align-items: center;
-    justify-content: center;
     width: 100%;
     max-width: 100%;
     padding: 12px 0 !important;
@@ -393,8 +388,7 @@ nav.vertical-sidebar .app-logo .logo img {
     max-height: 36px !important;
     height: auto !important;
     object-fit: contain !important;
-    object-position: center center;
-    margin: 0 auto !important;
+    object-position: left center;
     float: none !important;
 }
 

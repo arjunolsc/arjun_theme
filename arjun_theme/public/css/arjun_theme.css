@@ -198,24 +198,31 @@ select.input-with-feedback:not(.input-xs) {
 }
 
 /* Autocomplete/link-field suggestion dropdown: clearly highlight the
-   hovered/keyboard-selected option instead of Frappe's default barely-
-   visible --control-bg tint. Frappe renders these as <li> for plain
-   Select/Autocomplete fields and as <div role="option"> for Link fields
-   (server-side search results) - both need covering. */
-.awesomplete>[role="listbox"]>li:hover,
+   hovered option instead of Frappe's default barely-visible --control-bg
+   tint. Frappe renders these as <li> for plain Select/Autocomplete fields
+   and as <div role="option"> for Link fields (server-side search results)
+   - both need covering.
+
+   aria-selected="true" marks whichever item Enter would pick right now
+   (defaults to the first item, moves with arrow keys) - it's independent
+   of mouse hover, so it gets its own lighter tint. Giving it the same
+   solid fill as :hover made two items look highlighted at once whenever
+   you moused over anything other than the first item. */
 .awesomplete>[role="listbox"]>li[aria-selected="true"],
-.awesomplete>[role="listbox"]>[role="option"]:hover,
 .awesomplete>[role="listbox"]>[role="option"][aria-selected="true"] {
+    background-color: rgba(15, 98, 106, 0.12) !important;
+    color: #0f626a !important;
+}
+
+.awesomplete>[role="listbox"]>li:hover,
+.awesomplete>[role="listbox"]>[role="option"]:hover {
     background-color: #0f626a !important;
     color: #ffffff !important;
 }
 
 .awesomplete>[role="listbox"]>li:hover .link-option,
-.awesomplete>[role="listbox"]>li[aria-selected="true"] .link-option,
 .awesomplete>[role="listbox"]>[role="option"]:hover .link-option,
-.awesomplete>[role="listbox"]>[role="option"][aria-selected="true"] .link-option,
-.awesomplete>[role="listbox"]>[role="option"]:hover .text-muted,
-.awesomplete>[role="listbox"]>[role="option"][aria-selected="true"] .text-muted {
+.awesomplete>[role="listbox"]>[role="option"]:hover .text-muted {
     color: #ffffff !important;
 }
 

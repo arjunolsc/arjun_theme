@@ -197,6 +197,28 @@ select.input-with-feedback:not(.input-xs) {
     outline: none !important;
 }
 
+/* Autocomplete/link-field suggestion dropdown: clearly highlight the
+   hovered/keyboard-selected option instead of Frappe's default barely-
+   visible --control-bg tint. Frappe renders these as <li> for plain
+   Select/Autocomplete fields and as <div role="option"> for Link fields
+   (server-side search results) - both need covering. */
+.awesomplete>[role="listbox"]>li:hover,
+.awesomplete>[role="listbox"]>li[aria-selected="true"],
+.awesomplete>[role="listbox"]>[role="option"]:hover,
+.awesomplete>[role="listbox"]>[role="option"][aria-selected="true"] {
+    background-color: #0f626a !important;
+    color: #ffffff !important;
+}
+
+.awesomplete>[role="listbox"]>li:hover .link-option,
+.awesomplete>[role="listbox"]>li[aria-selected="true"] .link-option,
+.awesomplete>[role="listbox"]>[role="option"]:hover .link-option,
+.awesomplete>[role="listbox"]>[role="option"][aria-selected="true"] .link-option,
+.awesomplete>[role="listbox"]>[role="option"]:hover .text-muted,
+.awesomplete>[role="listbox"]>[role="option"][aria-selected="true"] .text-muted {
+    color: #ffffff !important;
+}
+
 /* Disabled / Read-Only Fields (KI-Admin Base Style) */
 .form-control:not([type="checkbox"]):not([type="radio"]):disabled,
 .form-control:not([type="checkbox"]):not([type="radio"])[readonly],

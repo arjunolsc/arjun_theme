@@ -11,10 +11,18 @@
     const ArjunPortal = {
         init: function () {
             this.addBodyClass();
+            this.setTitle();
             this.enhanceSidebar();
             this.enhanceAccountPage();
             this.enhanceNavbar();
             this.enhanceLists();
+        },
+
+        /**
+         * Every portal tab always reads "OM HRMS" (login page is excluded above).
+         */
+        setTitle: function () {
+            document.title = "OM HRMS";
         },
 
         /**

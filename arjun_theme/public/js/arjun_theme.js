@@ -3,6 +3,16 @@
 
     frappe.provide("arjun_theme");
 
+    // Every Desk tab always reads "OM HRMS", regardless of which page/report/
+    // form is open. frappe.utils.set_title is the single choke point every
+    // route change (router.js, page.js) funnels through, so overriding it
+    // here covers the whole Desk rather than patching each call site.
+    arjun_theme.FIXED_TAB_TITLE = "OM HRMS";
+    frappe.utils.set_title = function () {
+        document.title = arjun_theme.FIXED_TAB_TITLE;
+    };
+    document.title = arjun_theme.FIXED_TAB_TITLE;
+
     arjun_theme.setup = function () {
         $('body').addClass('arjun-theme-active');
         arjun_theme.run_patches();

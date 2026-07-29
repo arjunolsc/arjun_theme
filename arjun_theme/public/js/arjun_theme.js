@@ -133,19 +133,7 @@
 
             // Bind click event to toggle sidebar
             $('.header-toggle').on('click', function () {
-                const $body = $('body');
-                const $icon = $(this).find('iconify-icon');
-                const $sidebar = $('.vertical-sidebar');
-
-                if ($body.hasClass('sidebar-menu-opened')) {
-                    $body.removeClass('sidebar-menu-opened');
-                    $sidebar.removeClass('semi-nav');
-                    $icon.attr('icon', 'line-md:menu-fold-left');
-                } else {
-                    $body.addClass('sidebar-menu-opened');
-                    $sidebar.addClass('semi-nav');
-                    $icon.attr('icon', 'line-md:menu-fold-right');
-                }
+                arjun_theme.set_sidebar_narrow(!$('body').hasClass('sidebar-menu-opened'));
             });
         }
     };
@@ -154,28 +142,58 @@
     // and labels clip mid-word. Auto-collapse to icon-only (semi-nav) —
     // the same class the manual header-toggle button already uses, so
     // hover-to-expand still works exactly as it does when toggled by hand.
+    //
+    // run_patches() re-runs on every Frappe 'page-change' (e.g. switching
+    // workspaces), not just on real window resizes. The naive version of
+    // this re-decided narrow-vs-full from scratch every single time it ran,
+    // which meant: collapse the sidebar manually, click into a workspace
+    // while still hovered/expanded -> page-change fires -> width is wide ->
+    // it force-uncollapses, silently discarding the manual choice. Fix:
+    // only let *actual* window-resize events decide the state. Page-change
+    // just re-applies whatever was last decided (manual or auto), via
+    // reapply_current_state(), without re-evaluating width.
     arjun_theme.RESPONSIVE_SIDEBAR_BREAKPOINT = 1400;
+    arjun_theme._responsive_sidebar_bound = false;
+
+    arjun_theme.set_sidebar_narrow = function (narrow) {
+        const $body = $('body');
+        const $sidebar = $('.vertical-sidebar');
+        const $icon = $('.header-toggle iconify-icon');
+
+        if (narrow) {
+            $body.addClass('sidebar-menu-opened');
+            $sidebar.addClass('semi-nav');
+            $icon.attr('icon', 'line-md:menu-fold-right');
+        } else {
+            $body.removeClass('sidebar-menu-opened');
+            $sidebar.removeClass('semi-nav');
+            $icon.attr('icon', 'line-md:menu-fold-left');
+        }
+        arjun_theme._sidebar_narrow = narrow;
+    };
+
+    // Re-apply the last known state to freshly-rendered DOM (page-change
+    // replaces the sidebar/content markup) without re-deciding it.
+    arjun_theme.reapply_current_state = function () {
+        if (typeof arjun_theme._sidebar_narrow === 'boolean') {
+            arjun_theme.set_sidebar_narrow(arjun_theme._sidebar_narrow);
+        }
+    };
 
     arjun_theme.setup_responsive_sidebar = function () {
-        const apply = function () {
-            const $body = $('body');
-            const $sidebar = $('.vertical-sidebar');
-            const $icon = $('.header-toggle iconify-icon');
-            const narrow = window.innerWidth < arjun_theme.RESPONSIVE_SIDEBAR_BREAKPOINT;
+        if (arjun_theme._responsive_sidebar_bound) {
+            arjun_theme.reapply_current_state();
+            return;
+        }
+        arjun_theme._responsive_sidebar_bound = true;
 
-            if (narrow && !$sidebar.hasClass('semi-nav')) {
-                $body.addClass('sidebar-menu-opened');
-                $sidebar.addClass('semi-nav');
-                $icon.attr('icon', 'line-md:menu-fold-right');
-            } else if (!narrow && $sidebar.hasClass('semi-nav')) {
-                $body.removeClass('sidebar-menu-opened');
-                $sidebar.removeClass('semi-nav');
-                $icon.attr('icon', 'line-md:menu-fold-left');
-            }
-        };
+        // First-ever load: decide from the actual window width.
+        arjun_theme.set_sidebar_narrow(window.innerWidth < arjun_theme.RESPONSIVE_SIDEBAR_BREAKPOINT);
 
-        apply();
-        $(window).off('resize.arjun_responsive_sidebar').on('resize.arjun_responsive_sidebar', apply);
+        // Only real resizes re-decide narrow-vs-full from here on.
+        $(window).off('resize.arjun_responsive_sidebar').on('resize.arjun_responsive_sidebar', function () {
+            arjun_theme.set_sidebar_narrow(window.innerWidth < arjun_theme.RESPONSIVE_SIDEBAR_BREAKPOINT);
+        });
     };
 
     arjun_theme.mutate_custom_elements = function () {

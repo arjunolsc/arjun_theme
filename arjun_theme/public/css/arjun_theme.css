@@ -369,6 +369,9 @@ nav .app-logo {
     white-space: nowrap;
     overflow: hidden;
     box-sizing: border-box;
+    /* The OM Logistics logo has white text elements — needs a dark
+       background to read, same navy as the login page. */
+    background: #10225F !important;
 }
 
 nav.vertical-sidebar .app-logo .logo {

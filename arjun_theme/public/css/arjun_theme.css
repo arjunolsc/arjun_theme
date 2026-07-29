@@ -423,7 +423,7 @@ nav .app-nav .main-nav {
 nav .app-nav .menu-title span {
     color: var(--font-light-color);
     display: block;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: .5px;
     margin-bottom: 2px;
@@ -441,7 +441,7 @@ nav .app-nav .main-nav>li:not(.menu-title)>a {
     border-radius: 5px;
     color: var(--font-color);
     display: block !important;
-    font-size: 13px !important;
+    font-size: 15px !important;
     font-weight: 500;
     margin-bottom: 2px;
     padding: 7px 10px !important;

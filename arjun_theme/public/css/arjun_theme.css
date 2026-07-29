@@ -1188,3 +1188,52 @@ body.arjun-theme-active .enhanced-grid-container .grid-row-open .form-in-grid .g
 body.arjun-theme-active .enhanced-grid-container .grid-row-open .form-in-grid .grid-header-toolbar .row-actions .btn.grid-delete-row .icon use {
     stroke: #fff !important;
 }
+/* ==========================================================================
+   NAVY WORKSPACE SIDEBAR — matches the karm.omone.in reference palette
+   ========================================================================== */
+nav.vertical-sidebar {
+    background: linear-gradient(180deg, #10225F 0%, #172E7A 58.17%, #0B1843 100%) !important;
+}
+
+nav.vertical-sidebar .app-logo {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+nav .app-nav .menu-title span {
+    color: #838fb9 !important;
+}
+
+nav .app-nav .main-nav>li>a,
+nav .app-nav .main-nav>li:not(.menu-title)>a {
+    color: #8EA1E0 !important;
+}
+
+nav .app-nav .main-nav>li>a svg {
+    stroke: #8EA1E0 !important;
+}
+
+nav .app-nav .main-nav>li>a iconify-icon {
+    color: #8EA1E0 !important;
+}
+
+nav .app-nav .main-nav>li>a:hover {
+    background-color: #1e3a8a !important;
+    color: #ffffff !important;
+}
+
+nav .app-nav .main-nav>li:hover>a svg,
+nav .app-nav .main-nav>li:hover>a iconify-icon {
+    stroke: #ffffff !important;
+    color: #ffffff !important;
+}
+
+nav .app-nav .main-nav>li.active>a {
+    background-color: #1C3CA3 !important;
+    color: #ffffff !important;
+}
+
+nav .app-nav .main-nav>li.active>a svg,
+nav .app-nav .main-nav>li.active>a iconify-icon {
+    stroke: #ffffff !important;
+    color: #ffffff !important;
+}

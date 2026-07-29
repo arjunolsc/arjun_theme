@@ -256,11 +256,43 @@ body.arjun-theme-active[data-route=""] .sidebar-toggle-btn {
 
 /* Style Frappe Native Navbar instead of hiding it */
 body.arjun-theme-active .sticky-top .navbar {
-    background-color: var(--surface-color);
+    background-color: #10225F !important;
     backdrop-filter: var(--backdrop-blur);
-    border-bottom: var(--glass-border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
     padding: 12px 24px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Navy navbar text/icons */
+body.arjun-theme-active .sticky-top .navbar .header-toggle,
+body.arjun-theme-active .sticky-top .navbar #navbar-breadcrumbs,
+body.arjun-theme-active .sticky-top .navbar #navbar-breadcrumbs a,
+body.arjun-theme-active .sticky-top .navbar #navbar-breadcrumbs li,
+body.arjun-theme-active .sticky-top .navbar .navbar-right,
+body.arjun-theme-active .sticky-top .navbar .navbar-right a,
+body.arjun-theme-active .sticky-top .navbar .navbar-right span,
+body.arjun-theme-active .sticky-top .navbar #navbar-help,
+body.arjun-theme-active .sticky-top .navbar #navbar-help span {
+    color: #ffffff !important;
+}
+
+body.arjun-theme-active .sticky-top .navbar .header-toggle iconify-icon,
+body.arjun-theme-active .sticky-top .navbar .navbar-right svg,
+body.arjun-theme-active .sticky-top .navbar #navbar-help svg {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+}
+
+body.arjun-theme-active .sticky-top .navbar .notifications-icon,
+body.arjun-theme-active .sticky-top .navbar .notifications-seen,
+body.arjun-theme-active .sticky-top .navbar .notifications-unseen {
+    filter: brightness(0) invert(1);
+}
+
+body.arjun-theme-active .sticky-top .navbar .search-bar,
+body.arjun-theme-active .sticky-top .navbar #navbar-search {
+    background-color: #ffffff !important;
+    color: #1F2937 !important;
 }
 
 /* Navbar search: global input styles strip icon padding */

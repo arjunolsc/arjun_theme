@@ -3,13 +3,13 @@
 /* Bump Frappe's base font-size scale for the whole Desk. This file loads
    last in app_include_css, so it wins over Frappe's own :root declaration. */
 :root {
-    --text-tiny: 12px;
-    --text-xs: 13px;
-    --text-sm: 14px;
-    --text-md: 14px;
-    --text-base: 15px;
-    --text-lg: 17px;
-    --text-xl: 19px;
+    --text-tiny: 14px;
+    --text-xs: 15px;
+    --text-sm: 16px;
+    --text-md: 16px;
+    --text-base: 17px;
+    --text-lg: 19px;
+    --text-xl: 21px;
 }
 
 /* Bold text everywhere on the Desk. svg/path/iconify-icon excluded so icon

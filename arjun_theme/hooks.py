@@ -49,9 +49,14 @@ web_include_js = [
 # include custom scss in every website theme (without file extension ".scss")
 # website_theme_scss = "arjun_theme/public/scss/website"
 
-# favicon shown on the browser tab (Desk, login, portal, everywhere)
+# favicon shown on the browser tab (Desk, login, portal, everywhere), and
+# the logo flashed full-screen by templates/includes/login/login.js right
+# after a successful login (Frappe's own splash_screen.html include) —
+# without this, it falls back to whichever app's hooks.py sets splash_image,
+# which on this bench is ERPNext's own logo.
 website_context = {
-    "favicon": "/assets/arjun_theme/images/om_favicon.png"
+    "favicon": "/assets/arjun_theme/images/om_favicon.png",
+    "splash_image": "/assets/arjun_theme/images/om_favicon.png"
 }
 
 # include js, css files in header of web form

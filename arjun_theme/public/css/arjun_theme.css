@@ -547,7 +547,7 @@ nav .app-nav .main-nav>li.active>a iconify-icon {
 
 .widget .widget-title {
     font-weight: 600 !important;
-    font-size: 16px !important;
+    font-size: 20px !important;
     color: var(--text-primary) !important;
     letter-spacing: 0;
     margin: 0 !important;
@@ -629,7 +629,7 @@ nav .app-nav .main-nav>li.active>a iconify-icon {
     border-radius: 8px !important;
     color: var(--font-color) !important;
     font-weight: 500 !important;
-    font-size: 14px !important;
+    font-size: 18px !important;
     background: var(--surface-color) !important;
     border: 1px solid rgba(0, 0, 0, 0.06) !important;
     border-left: 4px solid var(--primary-color) !important;
@@ -783,7 +783,7 @@ nav .app-nav .main-nav>li.active>a iconify-icon {
 }
 
 .shortcut-widget-box .widget-title {
-    font-size: 15px !important;
+    font-size: 19px !important;
     font-weight: 500 !important;
     color: var(--font-color) !important;
 }
@@ -954,7 +954,7 @@ span.sidebar-item-label {
 /* Title goes below Number */
 .number-widget-box .widget-title {
     order: 3 !important;
-    font-size: 14px !important;
+    font-size: 18px !important;
     font-weight: 600 !important;
     text-transform: capitalize !important;
     color: var(--text-secondary) !important;

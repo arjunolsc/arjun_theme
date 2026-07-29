@@ -362,6 +362,7 @@ body.arjun-theme-active #freeze.grid-form {
 
 nav .app-logo {
     align-items: center;
+    justify-content: center;
     border-bottom: 1px dashed var(--border_color);
     display: flex;
     height: 56px;
@@ -377,6 +378,7 @@ nav .app-logo {
 nav.vertical-sidebar .app-logo .logo {
     display: flex;
     align-items: center;
+    justify-content: center;
     width: 100%;
     max-width: 100%;
     padding: 12px 0 !important;
@@ -391,7 +393,8 @@ nav.vertical-sidebar .app-logo .logo img {
     max-height: 36px !important;
     height: auto !important;
     object-fit: contain !important;
-    object-position: left center;
+    object-position: center center;
+    margin: 0 auto !important;
     float: none !important;
 }
 

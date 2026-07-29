@@ -22,6 +22,10 @@
                     <span class="sidebar-item-icon">
                         <iconify-icon icon="line-md:{{ page.custom_animated_icon }}"></iconify-icon>
                     </span>
+                    {% elif page.icon %}
+                    <span class="sidebar-item-icon">
+                        <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-{{ page.icon }}"></use></svg>
+                    </span>
                     {% else %}
                     <span class="sidebar-item-icon">
                         <iconify-icon icon="line-md:arrow-small-right"></iconify-icon>

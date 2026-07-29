@@ -1,5 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
+/* Bump Frappe's base font-size scale for the whole Desk. This file loads
+   last in app_include_css, so it wins over Frappe's own :root declaration. */
+:root {
+    --text-tiny: 12px;
+    --text-xs: 13px;
+    --text-sm: 14px;
+    --text-md: 14px;
+    --text-base: 15px;
+    --text-lg: 17px;
+    --text-xl: 19px;
+}
+
 /* --- CUSTOM MENU ITEM STYLES --- */
 .page-container {
     background: var(--np-bg) !important;

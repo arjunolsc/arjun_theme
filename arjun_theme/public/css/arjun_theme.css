@@ -1241,6 +1241,11 @@ nav .app-nav .main-nav>li:not(.menu-title)>a {
 }
 
 nav .app-nav .main-nav>li>a svg {
+    --icon-stroke: #8EA1E0;
+    stroke: #8EA1E0 !important;
+}
+
+nav .app-nav .main-nav>li>a svg use {
     stroke: #8EA1E0 !important;
 }
 
@@ -1255,8 +1260,13 @@ nav .app-nav .main-nav>li>a:hover {
 
 nav .app-nav .main-nav>li:hover>a svg,
 nav .app-nav .main-nav>li:hover>a iconify-icon {
+    --icon-stroke: #ffffff;
     stroke: #ffffff !important;
     color: #ffffff !important;
+}
+
+nav .app-nav .main-nav>li:hover>a svg use {
+    stroke: #ffffff !important;
 }
 
 nav .app-nav .main-nav>li.active>a {
@@ -1266,8 +1276,13 @@ nav .app-nav .main-nav>li.active>a {
 
 nav .app-nav .main-nav>li.active>a svg,
 nav .app-nav .main-nav>li.active>a iconify-icon {
+    --icon-stroke: #ffffff;
     stroke: #ffffff !important;
     color: #ffffff !important;
+}
+
+nav .app-nav .main-nav>li.active>a svg use {
+    stroke: #ffffff !important;
 }
 
 /* ==========================================================================

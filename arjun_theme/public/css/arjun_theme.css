@@ -510,6 +510,12 @@ nav .app-nav .main-nav>li:not(.menu-title)>a {
     transition: var(--app-transition);
     white-space: nowrap;
     text-decoration: none;
+    /* ki_style.css puts position:relative on the <li>, not the <a>. Once a
+       workspace expands, its <li> grows to contain the whole child list, so
+       the chevron's absolutely-positioned ::after (anchored to that <li>)
+       drifted to the vertical center of the WHOLE expanded block instead of
+       staying on this row. Anchoring position here fixes that. */
+    position: relative !important;
 }
 
 nav .app-nav .main-nav>li>a:hover {

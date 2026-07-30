@@ -587,7 +587,7 @@ nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a {
     border-radius: 5px;
     color: var(--font-color);
     display: block;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     margin-bottom: 2px;
     padding: 6px 10px 6px 2.7rem;
@@ -608,8 +608,8 @@ nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li.active>a {
 }
 
 nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a svg {
-    height: 16px;
-    width: 16px;
+    height: 18px;
+    width: 18px;
     stroke-width: 1.5;
     fill: none;
     --icon-stroke: var(--font-color);

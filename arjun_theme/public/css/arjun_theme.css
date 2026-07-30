@@ -607,6 +607,46 @@ nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li.active>a {
     color: #ffffff !important;
 }
 
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a svg {
+    height: 16px;
+    width: 16px;
+    stroke-width: 1.5;
+    fill: none;
+    --icon-stroke: var(--font-color);
+    stroke: var(--font-color);
+    vertical-align: middle;
+    transition: var(--app-transition);
+}
+
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a svg use {
+    stroke: var(--font-color);
+}
+
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a iconify-icon {
+    vertical-align: middle;
+    transition: var(--app-transition);
+}
+
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a:hover svg {
+    --icon-stroke: rgba(var(--primary), 1);
+    stroke: rgba(var(--primary), 1);
+}
+
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a:hover svg use {
+    stroke: rgba(var(--primary), 1);
+}
+
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li.active>a svg,
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li.active>a iconify-icon {
+    --icon-stroke: #ffffff;
+    stroke: #ffffff !important;
+    color: #ffffff !important;
+}
+
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li.active>a svg use {
+    stroke: #ffffff !important;
+}
+
 /* Icon-only (semi-nav) mode has no room for a nested list - keep it
    collapsed regardless of expanded state until the sidebar widens back out. */
 nav.vertical-sidebar.semi-nav:not(:hover) .sidebar-child-nav {
@@ -1440,6 +1480,24 @@ nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a:hover {
 nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li.active>a {
     background-color: #1C3CA3 !important;
     color: #ffffff !important;
+}
+
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a svg,
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a svg use {
+    --icon-stroke: #8EA1E0;
+    stroke: #8EA1E0 !important;
+}
+
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a:hover svg,
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a:hover svg use {
+    --icon-stroke: #ffffff;
+    stroke: #ffffff !important;
+}
+
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li.active>a svg,
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li.active>a svg use {
+    --icon-stroke: #ffffff;
+    stroke: #ffffff !important;
 }
 
 /* ==========================================================================

@@ -39,6 +39,15 @@
                     {% for child in page.child_workspace %}
                     <li>
                         <a href="/app/{{ child.name | lower | replace(' ', '-') }}">
+                            {% if child.custom_animated_icon %}
+                            <span class="sidebar-item-icon">
+                                <iconify-icon icon="line-md:{{ child.custom_animated_icon }}"></iconify-icon>
+                            </span>
+                            {% elif child.icon %}
+                            <span class="sidebar-item-icon">
+                                <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-{{ child.icon }}"></use></svg>
+                            </span>
+                            {% endif %}
                             <span class="sidebar-item-label">{{ child.title }}</span>
                         </a>
                     </li>

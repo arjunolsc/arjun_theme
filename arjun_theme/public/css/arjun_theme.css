@@ -939,13 +939,27 @@ nav .app-nav .main-nav>li:not(.menu-title)>a[aria-expanded="true"] {
 
 /* --- OVERRIDE KI-ADMIN MISSING ICONS --- */
 /* The KI-Admin template relies on a "Phosphor-Bold" icon font for the dropdown arrows.
-   Since we don't have this font, we'll swap the ::after pseudo element to use a native SVG chevron. */
+   Since we don't have this font, we'll swap the ::after pseudo element to use a native SVG chevron.
+
+   Uses a CSS mask (not background-image) so the chevron picks up currentColor
+   dynamically. stroke='currentColor' inside a background-image data URI does
+   NOT inherit the host element's color - that SVG is its own isolated
+   resource and currentColor there resolves to a fixed color at parse time,
+   which is why the arrow looked a different shade than the icon/label next
+   to it. A mask only uses the SVG for shape/alpha; background-color:
+   currentColor supplies the actual, live-updating fill. */
 nav .app-nav .main-nav>li:not(.menu-title)>a::after {
     content: "" !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
-    background-size: 12px 12px !important;
+    background-image: none !important;
+    background-color: currentColor !important;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+    -webkit-mask-repeat: no-repeat !important;
+    mask-repeat: no-repeat !important;
+    -webkit-mask-position: center !important;
+    mask-position: center !important;
+    -webkit-mask-size: 12px 12px !important;
+    mask-size: 12px 12px !important;
     width: 16px !important;
     height: 16px !important;
     right: 1.25rem !important;

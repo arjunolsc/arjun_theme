@@ -731,7 +731,7 @@ nav .app-nav .main-nav>li:not(.menu-title)>a[aria-expanded="true"] {
 
 .widget .widget-title {
     font-weight: 600 !important;
-    font-size: 20px !important;
+    font-size: 17px !important;
     color: var(--text-primary) !important;
     letter-spacing: 0;
     margin: 0 !important;
@@ -813,7 +813,7 @@ nav .app-nav .main-nav>li:not(.menu-title)>a[aria-expanded="true"] {
     border-radius: 8px !important;
     color: var(--font-color) !important;
     font-weight: 500 !important;
-    font-size: 18px !important;
+    font-size: 15px !important;
     background: var(--surface-color) !important;
     border: 1px solid rgba(0, 0, 0, 0.06) !important;
     border-left: 4px solid var(--primary-color) !important;
@@ -967,7 +967,7 @@ nav .app-nav .main-nav>li:not(.menu-title)>a[aria-expanded="true"] {
 }
 
 .shortcut-widget-box .widget-title {
-    font-size: 19px !important;
+    font-size: 16px !important;
     font-weight: 500 !important;
     color: var(--font-color) !important;
 }

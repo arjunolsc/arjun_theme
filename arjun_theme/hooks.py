@@ -24,26 +24,45 @@ app_license = "mit"
 # Includes in <head>
 # ------------------
 
+# These files are referenced by a fixed URL (unlike Frappe's own bundled
+# desk.bundle.<hash>.css files), so browsers/proxies are free to cache them
+# indefinitely once fetched - editing the file doesn't change its URL, so a
+# plain reload/rebuild/migrate on the server doesn't guarantee anyone's
+# browser actually re-fetches it. _v() appends each file's own mtime as a
+# query string so the URL itself changes whenever the file does, forcing a
+# fresh fetch automatically on every future update - no manual cache-clear
+# ever required again.
+import os
+
+
+def _v(relpath):
+    abs_path = os.path.join(os.path.dirname(__file__), "public", relpath)
+    try:
+        return str(int(os.path.getmtime(abs_path)))
+    except OSError:
+        return "0"
+
+
 # include js, css files in header of desk.html
 app_include_css = [
-    "/assets/arjun_theme/vendor/simplebar/simplebar.css",
-    "/assets/arjun_theme/css/ki_style.css",
-    "/assets/arjun_theme/css/ki_responsive.css",
-    "/assets/arjun_theme/css/arjun_theme.css"
+    f"/assets/arjun_theme/vendor/simplebar/simplebar.css?v={_v('vendor/simplebar/simplebar.css')}",
+    f"/assets/arjun_theme/css/ki_style.css?v={_v('css/ki_style.css')}",
+    f"/assets/arjun_theme/css/ki_responsive.css?v={_v('css/ki_responsive.css')}",
+    f"/assets/arjun_theme/css/arjun_theme.css?v={_v('css/arjun_theme.css')}",
 ]
 app_include_js = [
-    "/assets/arjun_theme/vendor/simplebar/simplebar.js",
-    "/assets/arjun_theme/vendor/animated_icon/iconify-icon.min.js",
-    "/assets/arjun_theme/js/arjun_theme.js"
+    f"/assets/arjun_theme/vendor/simplebar/simplebar.js?v={_v('vendor/simplebar/simplebar.js')}",
+    f"/assets/arjun_theme/vendor/animated_icon/iconify-icon.min.js?v={_v('vendor/animated_icon/iconify-icon.min.js')}",
+    f"/assets/arjun_theme/js/arjun_theme.js?v={_v('js/arjun_theme.js')}",
 ]
 
 # include js, css files in header of web template (portal/customer pages)
 web_include_css = [
-    "/assets/arjun_theme/css/arjun_portal.css"
+    f"/assets/arjun_theme/css/arjun_portal.css?v={_v('css/arjun_portal.css')}",
 ]
 web_include_js = [
-    "/assets/arjun_theme/vendor/animated_icon/iconify-icon.min.js",
-    "/assets/arjun_theme/js/arjun_portal.js"
+    f"/assets/arjun_theme/vendor/animated_icon/iconify-icon.min.js?v={_v('vendor/animated_icon/iconify-icon.min.js')}",
+    f"/assets/arjun_theme/js/arjun_portal.js?v={_v('js/arjun_portal.js')}",
 ]
 
 # include custom scss in every website theme (without file extension ".scss")

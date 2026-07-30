@@ -547,19 +547,37 @@ nav .app-nav .main-nav>li.active>a iconify-icon {
 }
 
 /* Expandable workspace children (Accounting > Payables, HR > Recruitment,
-   etc). Hidden until arjun_theme.js toggles .expanded on click. */
-.sidebar-child-nav {
+   etc). Hidden until arjun_theme.js toggles .expanded on click.
+
+   ki_style.css already ships a full generic submenu system for
+   `.main-nav > li:not(.menu-title) ul` (margin, li padding, the
+   left accent bar on ::before, active-state color via --ki-primary) - its
+   selector has higher specificity than a bare .sidebar-child-nav class, so
+   its 1rem ul margin + 0.3rem/1.5rem li padding was stacking on top of ours
+   and misaligning child text against the parent row. Neutralizing it at
+   the same selector weight (compound + !important) and re-driving spacing
+   and color from our own rules below, rather than fighting the cascade. */
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav {
     display: none;
-    list-style: none;
-    margin: 0 0 2px;
-    padding: 0;
+    list-style: none !important;
+    margin: 0 0 2px !important;
+    padding: 0 !important;
 }
 
-.sidebar-child-nav.expanded {
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav.expanded {
     display: block;
 }
 
-.sidebar-child-nav>li>a {
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li {
+    padding: 0 !important;
+    font-size: inherit !important;
+}
+
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a::before {
+    display: none !important;
+}
+
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a {
     border-radius: 5px;
     color: var(--font-color);
     display: block;
@@ -573,12 +591,12 @@ nav .app-nav .main-nav>li.active>a iconify-icon {
     white-space: nowrap;
 }
 
-.sidebar-child-nav>li>a:hover {
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a:hover {
     background-color: rgba(var(--primary), .1);
     color: rgba(var(--primary), 1);
 }
 
-.sidebar-child-nav>li.active>a {
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li.active>a {
     background-color: #12715b !important;
     color: #ffffff !important;
 }
@@ -587,6 +605,22 @@ nav .app-nav .main-nav>li.active>a iconify-icon {
    collapsed regardless of expanded state until the sidebar widens back out. */
 nav.vertical-sidebar.semi-nav:not(:hover) .sidebar-child-nav {
     display: none !important;
+}
+
+/* ki_style.css has its own pre-existing rule for
+   `.main-nav > li:not(.menu-title) > a[aria-expanded="true"]` (solid
+   --ki-primary teal background, white text, larger font, extra margin) -
+   built for a submenu system that was never wired up. Since we now set
+   aria-expanded ourselves for click-to-expand tracking, that rule fired
+   any time an item was expanded, regardless of whether it was the active
+   page - a color change tied to expand state, not navigation. Neutralize
+   it back to the normal resting style; .active (below) still drives the
+   real highlight. */
+nav .app-nav .main-nav>li:not(.menu-title)>a[aria-expanded="true"] {
+    background: transparent !important;
+    color: var(--font-color) !important;
+    margin-bottom: 2px !important;
+    font-size: 15px !important;
 }
 
 /* Responsive container adjustment */
@@ -1357,16 +1391,33 @@ nav .app-nav .main-nav>li.active>a svg use {
     stroke: #ffffff !important;
 }
 
-.sidebar-child-nav>li>a {
+/* Same ki_style.css [aria-expanded="true"] neutralization as the base
+   theme, restated here so the navy resting text color wins instead of the
+   base theme's --font-color. */
+nav .app-nav .main-nav>li:not(.menu-title)>a[aria-expanded="true"] {
+    background: transparent !important;
     color: #8EA1E0 !important;
 }
 
-.sidebar-child-nav>li>a:hover {
+nav .app-nav .main-nav>li.active>a[aria-expanded="true"] {
+    background-color: #1C3CA3 !important;
+    color: #ffffff !important;
+}
+
+/* Same compound-selector specificity as the base theme's equivalent rules
+   (see the alignment fix above) - a bare .sidebar-child-nav class here
+   loses the specificity tie-break against the base theme's higher-specificity
+   selector, regardless of which comes later in the file. */
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a {
+    color: #8EA1E0 !important;
+}
+
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a:hover {
     background-color: #1e3a8a !important;
     color: #ffffff !important;
 }
 
-.sidebar-child-nav>li.active>a {
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li.active>a {
     background-color: #1C3CA3 !important;
     color: #ffffff !important;
 }

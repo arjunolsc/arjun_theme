@@ -305,6 +305,14 @@ body.arjun-theme-active .sticky-top .navbar .vertical-bar {
     background-color: rgba(255, 255, 255, 0.25) !important;
 }
 
+/* Help dropdown in the navbar - not needed for this company. Frappe always
+   renders this <li> unconditionally (its Navbar Settings doctype only
+   controls the menu's contents, not whether the button itself shows), so
+   removing it has to happen here. */
+body.arjun-theme-active .sticky-top .navbar .dropdown-help {
+    display: none !important;
+}
+
 /* Frappe's default breadcrumb separator (#navbar-breadcrumbs a::before) is a
    fixed dark-stroke SVG (stroke='%231F272E'), baked in as the ::before
    content rather than currentColor - invisible against our dark navy

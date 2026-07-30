@@ -546,6 +546,49 @@ nav .app-nav .main-nav>li.active>a iconify-icon {
     color: #ffffff !important;
 }
 
+/* Expandable workspace children (Accounting > Payables, HR > Recruitment,
+   etc). Hidden until arjun_theme.js toggles .expanded on click. */
+.sidebar-child-nav {
+    display: none;
+    list-style: none;
+    margin: 0 0 2px;
+    padding: 0;
+}
+
+.sidebar-child-nav.expanded {
+    display: block;
+}
+
+.sidebar-child-nav>li>a {
+    border-radius: 5px;
+    color: var(--font-color);
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    padding: 6px 10px 6px 2.7rem;
+    text-decoration: none;
+    text-transform: capitalize;
+    transition: var(--app-transition);
+    white-space: nowrap;
+}
+
+.sidebar-child-nav>li>a:hover {
+    background-color: rgba(var(--primary), .1);
+    color: rgba(var(--primary), 1);
+}
+
+.sidebar-child-nav>li.active>a {
+    background-color: #12715b !important;
+    color: #ffffff !important;
+}
+
+/* Icon-only (semi-nav) mode has no room for a nested list - keep it
+   collapsed regardless of expanded state until the sidebar widens back out. */
+nav.vertical-sidebar.semi-nav:not(:hover) .sidebar-child-nav {
+    display: none !important;
+}
+
 /* Responsive container adjustment */
 .page-head {
     max-width: 100% !important;
@@ -1312,6 +1355,20 @@ nav .app-nav .main-nav>li.active>a iconify-icon {
 
 nav .app-nav .main-nav>li.active>a svg use {
     stroke: #ffffff !important;
+}
+
+.sidebar-child-nav>li>a {
+    color: #8EA1E0 !important;
+}
+
+.sidebar-child-nav>li>a:hover {
+    background-color: #1e3a8a !important;
+    color: #ffffff !important;
+}
+
+.sidebar-child-nav>li.active>a {
+    background-color: #1C3CA3 !important;
+    color: #ffffff !important;
 }
 
 /* ==========================================================================

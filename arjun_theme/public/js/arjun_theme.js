@@ -128,6 +128,31 @@
         arjun_theme.mutate_number_cards();
         arjun_theme.setup_icon_picker();
         arjun_theme.setup_responsive_sidebar();
+        arjun_theme.setup_sidebar_expand();
+    };
+
+    // Workspaces with children (Accounting, HR, Payroll, ...) render a
+    // chevron via CSS ::after, implying they expand - but nothing wired it
+    // up, so it always just linked straight through. Clicking now expands
+    // the nested list in place (in addition to navigating, same as clicking
+    // any other row) and auto-expands whichever parent is currently active
+    // so its children are visible without an extra click.
+    arjun_theme.setup_sidebar_expand = function () {
+        $('.main-nav > li.has-children > a').off('click.arjun_sidebar_expand')
+            .on('click.arjun_sidebar_expand', function () {
+                const $li = $(this).parent();
+                const expanded = $(this).attr('aria-expanded') === 'true';
+                $(this).attr('aria-expanded', String(!expanded));
+                $li.children('.sidebar-child-nav').toggleClass('expanded', !expanded);
+            });
+
+        $('.main-nav > li.has-children').each(function () {
+            const $li = $(this);
+            if ($li.find('> .sidebar-child-nav > li.active').length) {
+                $li.children('a').attr('aria-expanded', 'true');
+                $li.children('.sidebar-child-nav').addClass('expanded');
+            }
+        });
     };
 
     arjun_theme.mutate_number_cards = function () {
@@ -220,14 +245,14 @@
 
     arjun_theme.highlight_active_route = function () {
         const current_route = window.location.pathname;
-        $('.main-nav > li').removeClass('active');
+        $('.main-nav li').removeClass('active');
 
         // Exact matching
-        $(`.main-nav > li > a[href="${current_route}"]`).parent().addClass('active');
+        $(`.main-nav a[href="${current_route}"]`).parent().addClass('active');
 
         // Fuzzy matching
         if (current_route && current_route !== "/app") {
-            $('.main-nav > li > a').each(function () {
+            $('.main-nav a').each(function () {
                 let href = $(this).attr('href');
                 if (href && current_route.startsWith(href) && href !== "/app") {
                     $(this).parent().addClass('active');

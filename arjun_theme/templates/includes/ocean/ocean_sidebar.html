@@ -16,8 +16,9 @@
             </li>
 
             {% for page in pages %}
-            <li>
-                <a href="/app/{{ page.name | lower | replace(' ', '-') }}">
+            <li class="{{ 'has-children' if page.child_workspace else '' }}">
+                <a href="/app/{{ page.name | lower | replace(' ', '-') }}"
+                    {% if page.child_workspace %}aria-expanded="false"{% endif %}>
                     {% if page.custom_animated_icon %}
                     <span class="sidebar-item-icon">
                         <iconify-icon icon="line-md:{{ page.custom_animated_icon }}"></iconify-icon>
@@ -33,6 +34,17 @@
                     {% endif %}
                     <span class="sidebar-item-label">{{ page.title }}<span>
                 </a>
+                {% if page.child_workspace %}
+                <ul class="sidebar-child-nav">
+                    {% for child in page.child_workspace %}
+                    <li>
+                        <a href="/app/{{ child.name | lower | replace(' ', '-') }}">
+                            <span class="sidebar-item-label">{{ child.title }}<span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
             </li>
             {% endfor %}
         </ul>

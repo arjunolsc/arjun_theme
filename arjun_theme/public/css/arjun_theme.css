@@ -305,6 +305,14 @@ body.arjun-theme-active .sticky-top .navbar .vertical-bar {
     background-color: rgba(255, 255, 255, 0.25) !important;
 }
 
+/* Frappe's default breadcrumb separator (#navbar-breadcrumbs a::before) is a
+   fixed dark-stroke SVG (stroke='%231F272E'), baked in as the ::before
+   content rather than currentColor - invisible against our dark navy
+   navbar. Same arrow, white stroke. */
+body.arjun-theme-active .sticky-top .navbar #navbar-breadcrumbs a::before {
+    content: url("data:image/svg+xml;utf8,<svg width='6' height='8' viewBox='0 0 6 8' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M1.25 7.5L4.75 4L1.25 0.5' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round'/></svg>") !important;
+}
+
 body.arjun-theme-active .sticky-top .navbar .search-bar,
 body.arjun-theme-active .sticky-top .navbar #navbar-search {
     background-color: #ffffff !important;

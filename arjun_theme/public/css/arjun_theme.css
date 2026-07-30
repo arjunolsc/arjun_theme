@@ -590,7 +590,7 @@ nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a {
     font-size: 15px;
     font-weight: 500;
     margin-bottom: 2px;
-    padding: 6px 10px 6px 2.7rem;
+    padding: 6px 10px 6px 1.8rem;
     text-decoration: none;
     text-transform: capitalize;
     transition: var(--app-transition);

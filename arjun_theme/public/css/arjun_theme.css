@@ -12,14 +12,6 @@
     --text-xl: 21px;
 }
 
-/* Bold text everywhere on the Desk. svg/path/iconify-icon excluded so icon
-   glyphs (which key off font-weight-specific webfont files, not CSS weight)
-   don't fall back to a missing weight variant and render blank/broken. */
-body,
-body :not(svg):not(path):not(iconify-icon) {
-    font-weight: bold !important;
-}
-
 /* --- CUSTOM MENU ITEM STYLES --- */
 .page-container {
     background: var(--np-bg) !important;

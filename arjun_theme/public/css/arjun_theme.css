@@ -406,6 +406,16 @@ body.arjun-theme-active #freeze.grid-form {
     z-index: 1035;
 }
 
+/* Raising the freeze overlay above the sidebar (previous rule) pushed it
+   above the grid row-edit panel too (Frappe's own default z-index: 1021),
+   since that default only ever needed to clear the freeze overlay's
+   original z-index: 1020 - not this theme's raised one. Panel needs to
+   stay on top of its own freeze overlay, or the whole row-edit form
+   renders as a flat grey wash with no visible white card underneath it. */
+body.arjun-theme-active .grid-row-open .form-in-grid {
+    z-index: 1036;
+}
+
 .app-wrapper .app-content {
     height: 100vh;
     overflow-y: auto;

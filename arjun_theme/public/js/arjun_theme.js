@@ -13,6 +13,43 @@
     };
     document.title = arjun_theme.FIXED_TAB_TITLE;
 
+    // frappe.utils.scroll_to() defaults to animating $("html, body") when no
+    // element_to_be_scrolled is passed - true in stock Frappe, where the
+    // document itself scrolls. This theme's layout uses a nested
+    // .app-content div (overflow-y: auto, height: 100vh) as the real
+    // scrolling container instead, so html/body never actually moves.
+    // Callers throughout Frappe core (e.g. grid_row.js opening a row for
+    // edit) never pass their own scroll target, so without this the browser
+    // silently animates an element that was never scrolling - the row
+    // expands in place with no attempt to bring the rest of it into view.
+    if (frappe.utils && frappe.utils.scroll_to) {
+        const _original_scroll_to = frappe.utils.scroll_to;
+        frappe.utils.scroll_to = function (
+            element,
+            animate,
+            additional_offset,
+            element_to_be_scrolled,
+            callback,
+            highlight_element
+        ) {
+            if (!element_to_be_scrolled) {
+                const $appContent = $(".app-content");
+                if ($appContent.length) {
+                    element_to_be_scrolled = $appContent;
+                }
+            }
+            return _original_scroll_to.call(
+                this,
+                element,
+                animate,
+                additional_offset,
+                element_to_be_scrolled,
+                callback,
+                highlight_element
+            );
+        };
+    }
+
     arjun_theme.setup = function () {
         $('body').addClass('arjun-theme-active');
         arjun_theme.run_patches();

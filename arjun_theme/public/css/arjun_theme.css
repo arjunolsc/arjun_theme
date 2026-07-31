@@ -1543,3 +1543,18 @@ nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)
 nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)>a svg {
     margin: 0 !important;
 }
+
+/* This theme uses fixed px font-sizes throughout rather than rem, so
+   nothing scales down on its own for smaller/lower-resolution screens
+   (e.g. a common 1366x768 laptop) - the same 16-21px text that looks right
+   on a large monitor takes up proportionally more of a smaller screen,
+   reading as "everything is bigger" even though it's identical CSS.
+   Rather than hunting down every hardcoded font-size individually, zoom
+   scales the whole Desk UI (text, icons, spacing) down together
+   proportionally, at the same width this theme already collapses the
+   sidebar at. */
+@media (max-width: 1400px) {
+    body.arjun-theme-active .app-wrapper {
+        zoom: 0.9;
+    }
+}

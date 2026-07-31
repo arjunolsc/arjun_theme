@@ -218,6 +218,16 @@ select.input-with-feedback:not(.input-xs) {
     color: #ffffff !important;
 }
 
+/* Navbar "awesome bar" search results (Ctrl+K style dropdown) render each
+   item as an <a> inside the <li> - ki_style.css's global `a { color: ... }`
+   rule targets the anchor directly, which always wins over an inherited
+   color from the hovered <li> regardless of that rule's specificity. Has
+   to be overridden on the <a> (and its child spans) explicitly. */
+.awesomplete>[role="listbox"]>li:hover a,
+.awesomplete>[role="listbox"]>li:hover a span {
+    color: #ffffff !important;
+}
+
 /* Disabled / Read-Only Fields (KI-Admin Base Style) */
 .form-control:not([type="checkbox"]):not([type="radio"]):disabled,
 .form-control:not([type="checkbox"]):not([type="radio"])[readonly],

@@ -22,6 +22,20 @@
     // edit) never pass their own scroll target, so without this the browser
     // silently animates an element that was never scrolling - the row
     // expands in place with no attempt to bring the rest of it into view.
+    //
+    // Redirecting element_to_be_scrolled to .app-content alone isn't enough:
+    // frappe's own get_scroll_position() computes scroll_top as
+    // $(element).offset().top - navbar_height - additional_offset, which
+    // assumes whatever it scrolls shares the document's coordinate space
+    // (true for html/body, where scrollTop counts pixels from the very top
+    // of the page). .app-content's scrollTop instead counts pixels from the
+    // top of .app-content's OWN frame, which already starts below the
+    // navbar - reusing that formula double-subtracts the navbar height,
+    // landing short of the intended position and leaving a large gap of
+    // dimmed content above the row editor instead of opening near the top.
+    // Computing the delta directly from current rendered positions
+    // (getBoundingClientRect, both already in the same viewport space)
+    // sidesteps that mismatch entirely.
     if (frappe.utils && frappe.utils.scroll_to) {
         const _original_scroll_to = frappe.utils.scroll_to;
         frappe.utils.scroll_to = function (
@@ -32,10 +46,34 @@
             callback,
             highlight_element
         ) {
-            if (!element_to_be_scrolled) {
-                const $appContent = $(".app-content");
-                if ($appContent.length) {
-                    element_to_be_scrolled = $appContent;
+            const $appContent = $(".app-content");
+            if (!element_to_be_scrolled && $appContent.length && element && typeof element !== "number") {
+                const target = $(element).get(0);
+                const container = $appContent.get(0);
+                if (target && container) {
+                    const targetRect = target.getBoundingClientRect();
+                    const containerRect = container.getBoundingClientRect();
+                    const offset = cint(additional_offset) || 0;
+                    const new_scroll_top =
+                        container.scrollTop + (targetRect.top - containerRect.top) + offset;
+
+                    if (animate) {
+                        $appContent.animate({ scrollTop: Math.max(new_scroll_top, 0) }, 400);
+                    } else {
+                        container.scrollTop = Math.max(new_scroll_top, 0);
+                    }
+                    if (highlight_element) {
+                        $(element).addClass("highlight");
+                        document.addEventListener(
+                            "click",
+                            function () {
+                                $(element).removeClass("highlight");
+                            },
+                            { once: true }
+                        );
+                    }
+                    callback && callback();
+                    return;
                 }
             }
             return _original_scroll_to.call(

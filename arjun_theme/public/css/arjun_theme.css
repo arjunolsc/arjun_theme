@@ -3,13 +3,13 @@
 /* Bump Frappe's base font-size scale for the whole Desk. This file loads
    last in app_include_css, so it wins over Frappe's own :root declaration. */
 :root {
-    --text-tiny: 14px;
-    --text-xs: 15px;
-    --text-sm: 16px;
-    --text-md: 16px;
-    --text-base: 17px;
-    --text-lg: 19px;
-    --text-xl: 21px;
+    --text-tiny: 12px;
+    --text-xs: 13px;
+    --text-sm: 14px;
+    --text-md: 14px;
+    --text-base: 15px;
+    --text-lg: 17px;
+    --text-xl: 19px;
 }
 
 /* --- CUSTOM MENU ITEM STYLES --- */
@@ -1552,19 +1552,4 @@ nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)
 
 nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)>a svg {
     margin: 0 !important;
-}
-
-/* This theme uses fixed px font-sizes throughout rather than rem, so
-   nothing scales down on its own for smaller/lower-resolution screens
-   (e.g. a common 1366x768 laptop) - the same 16-21px text that looks right
-   on a large monitor takes up proportionally more of a smaller screen,
-   reading as "everything is bigger" even though it's identical CSS.
-   Rather than hunting down every hardcoded font-size individually, zoom
-   scales the whole Desk UI (text, icons, spacing) down together
-   proportionally, at the same width this theme already collapses the
-   sidebar at. */
-@media (max-width: 1400px) {
-    body.arjun-theme-active .app-wrapper {
-        zoom: 0.9;
-    }
 }

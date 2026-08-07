@@ -204,6 +204,47 @@
         arjun_theme.setup_icon_picker();
         arjun_theme.setup_responsive_sidebar();
         arjun_theme.setup_sidebar_expand();
+        arjun_theme.inject_hrms_home_greeting();
+    };
+
+    // Time-of-day greeting banner ("Good Morning, <name>") above the
+    // shortcuts on the Hrms Home workspace only - matched by the rendered
+    // page title text rather than the route, since workspace routes are
+    // slugified client-side (frappe.router.slug) and matching what's
+    // actually on screen is more robust than re-deriving that slug here.
+    //
+    // Prepended to .page-body (a sibling of .page-head, part of the static
+    // page shell) rather than the workspace's own .editor-js-container,
+    // which is populated asynchronously and briefly shows loading-skeleton
+    // placeholders on every reload - anchoring there made the banner pop in
+    // late, below the skeleton, instead of appearing immediately like the
+    // sidebar/title does.
+    arjun_theme.inject_hrms_home_greeting = function () {
+        const $title = $('.title-area .title-text').first();
+        if (!$title.length || $title.text().trim() !== 'Hrms Home') {
+            $('#arjun-hrms-greeting').remove();
+            return;
+        }
+        if ($('#arjun-hrms-greeting').length) return;
+
+        const $page_body = $('.page-head').first().next('.page-body');
+        if (!$page_body.length) return;
+
+        const hour = new Date().getHours();
+        let greeting = 'Good Evening';
+        if (hour < 12) greeting = 'Good Morning';
+        else if (hour < 17) greeting = 'Good Afternoon';
+
+        const full_name = (frappe.boot.user && frappe.boot.user.full_name) || frappe.session.user_fullname || frappe.session.user;
+        const today = frappe.datetime.str_to_user(frappe.datetime.get_today());
+
+        const $banner = $(
+            '<div id="arjun-hrms-greeting" class="arjun-hrms-greeting">' +
+                '<h2>' + frappe.utils.escape_html(greeting) + ', ' + frappe.utils.escape_html(full_name) + '</h2>' +
+                '<div class="arjun-hrms-greeting-date">' + frappe.utils.escape_html(today) + '</div>' +
+            '</div>'
+        );
+        $page_body.prepend($banner);
     };
 
     // Workspaces with children (Accounting, HR, Payroll, ...) render a
@@ -329,7 +370,7 @@
         if (current_route && current_route !== "/app") {
             $('.main-nav a').each(function () {
                 let href = $(this).attr('href');
-                if (href && current_route.startsWith(href) && href !== "/app") {
+                if (href && current_route.startsWith(href + "/") && href !== "/app") {
                     $(this).parent().addClass('active');
                 }
             });

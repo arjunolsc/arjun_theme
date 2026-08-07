@@ -1553,3 +1553,24 @@ nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)
 nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)>a svg {
     margin: 0 !important;
 }
+
+.arjun-hrms-greeting {
+    margin: 0 0 20px;
+    padding: 28px 32px;
+    border-radius: 12px;
+    background: linear-gradient(120deg, #16264f, #2d2f6e 55%, #4a3d8f);
+}
+
+.arjun-hrms-greeting h2 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #ffffff;
+}
+
+.arjun-hrms-greeting-date {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #c8cdf0;
+}

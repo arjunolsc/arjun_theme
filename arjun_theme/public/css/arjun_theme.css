@@ -506,8 +506,12 @@ nav.vertical-sidebar .app-logo .logo img {
 /* ki_style.css hardcodes .app-wrapper .semi-nav .app-logo to a fixed 80px,
    which doesn't match the collapsed sidebar's actual width (--semi-nav,
    4rem here). The logo tile then overflows past the sidebar's right edge -
-   tying it to the same variable keeps them in sync at any root font-size. */
-.app-wrapper .semi-nav .app-logo {
+   tying it to the same variable keeps them in sync at any root font-size.
+   :not(:hover) - ki_style.css already expands .semi-nav:hover .app-logo
+   back to width:100% when the sidebar hover-expands, but our !important
+   here was overriding that (non-important) rule regardless of hover,
+   leaving the logo tile stuck at the collapsed width the whole time. */
+.app-wrapper .semi-nav:not(:hover) .app-logo {
     width: var(--semi-nav) !important;
     padding: 0 6px !important;
 }
@@ -515,8 +519,9 @@ nav.vertical-sidebar .app-logo .logo img {
 /* At 4rem (~51px) collapsed width minus padding, ~39px of content room is
    left - the previous 48x40px cap left the image wider than that, so it
    overflowed the tile and got clipped by .app-logo's overflow:hidden.
-   Shrink and center it so the mark renders fully inside the collapsed rail. */
-nav.vertical-sidebar.semi-nav .app-logo .logo {
+   Shrink and center it so the mark renders fully inside the collapsed rail.
+   Same :not(:hover) reasoning as above - only while genuinely collapsed. */
+nav.vertical-sidebar.semi-nav:not(:hover) .app-logo .logo {
     /* the .d-inline-block utility class on this same link sets
        display:inline-block !important, which silently drops the
        flex/justify-content centering below it - reassert flex here
@@ -525,7 +530,7 @@ nav.vertical-sidebar.semi-nav .app-logo .logo {
     justify-content: center;
 }
 
-nav.vertical-sidebar.semi-nav .app-logo .logo img {
+nav.vertical-sidebar.semi-nav:not(:hover) .app-logo .logo img {
     max-width: 30px !important;
     max-height: 30px !important;
     object-position: center;

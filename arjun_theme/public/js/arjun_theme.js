@@ -206,6 +206,16 @@
         arjun_theme.setup_sidebar_expand();
         arjun_theme.inject_hrms_home_greeting();
         arjun_theme.setup_widget_card_collapse();
+        arjun_theme.simplify_navbar_search_placeholder();
+    };
+
+    // Frappe's navbar search input placeholder is "Search or type a
+    // command (Ctrl + G)" - shortened to "Search ..." here.
+    arjun_theme.simplify_navbar_search_placeholder = function () {
+        const el = document.getElementById('navbar-search');
+        if (el && el.placeholder !== 'Search ...') {
+            el.placeholder = 'Search ...';
+        }
     };
 
     // Time-of-day greeting banner ("Good Morning, <name>") above the
@@ -214,12 +224,16 @@
     // slugified client-side (frappe.router.slug) and matching what's
     // actually on screen is more robust than re-deriving that slug here.
     //
-    // Prepended to .page-body (a sibling of .page-head, part of the static
-    // page shell) rather than the workspace's own .editor-js-container,
-    // which is populated asynchronously and briefly shows loading-skeleton
-    // placeholders on every reload - anchoring there made the banner pop in
-    // late, below the skeleton, instead of appearing immediately like the
-    // sidebar/title does.
+    // Prepended to .layout-main-section (the direct parent of the
+    // workspace's own .editor-js-container) rather than .page-body, which
+    // sits several levels *outside* the actual scrolling element
+    // (.layout-main-section-wrapper, overflow:auto) - anchoring there made
+    // the banner stay fixed in place while only the cards below it
+    // scrolled, needing two separate scroll gestures instead of one.
+    // .layout-main-section itself isn't touched by Frappe's async
+    // workspace rendering (only its .editor-js-container child's content
+    // gets replaced), so the banner still shows up immediately rather than
+    // waiting on that content to load.
     arjun_theme.inject_hrms_home_greeting = function () {
         const $title = $('.title-area .title-text').first();
         if (!$title.length || $title.text().trim() !== 'Hrms Home') {
@@ -228,8 +242,8 @@
         }
         if ($('#arjun-hrms-greeting').length) return;
 
-        const $page_body = $('.page-head').first().next('.page-body');
-        if (!$page_body.length) return;
+        const $main_section = $('.layout-main-section').first();
+        if (!$main_section.length) return;
 
         const hour = new Date().getHours();
         let greeting = 'Good Evening';
@@ -245,7 +259,7 @@
                 '<div class="arjun-hrms-greeting-date">' + frappe.utils.escape_html(today) + '</div>' +
             '</div>'
         );
-        $page_body.prepend($banner);
+        $main_section.prepend($banner);
     };
 
     arjun_theme.collapse_chevron_html = function (extra_class) {

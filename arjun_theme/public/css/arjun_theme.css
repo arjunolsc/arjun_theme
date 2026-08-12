@@ -1676,3 +1676,15 @@ nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)
     font-size: var(--text-lg);
     font-weight: 600;
 }
+
+/* Without this, the report/master cards render fully expanded first and
+   only collapse into their groups once arjun_theme.js finishes (which
+   waits for Frappe's cards to actually finish loading, then debounces) -
+   a visible flash from expanded to collapsed on every load. Hide them
+   until that's done instead. #arjun-hrms-greeting only exists on Hrms
+   Home (injected by the same script), so :has() scopes this hiding to
+   that workspace only - every other workspace's cards render normally,
+   unaffected. */
+body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) .editor-js-container .widget.links-widget-box {
+    visibility: hidden;
+}

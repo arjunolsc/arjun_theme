@@ -238,6 +238,12 @@
         const $title = $('.title-area .title-text').first();
         if (!$title.length || $title.text().trim() !== 'Hrms Home') {
             $('#arjun-hrms-greeting').remove();
+            // document.body is reused across Frappe's SPA route changes -
+            // reset this so the hide-until-grouped CSS (scoped to
+            // body:has(#arjun-hrms-greeting)) protects against the flash
+            // again next time the user navigates back to Hrms Home,
+            // instead of the class staying set from this visit forever.
+            document.body.classList.remove('arjun-groups-ready');
             return;
         }
         if ($('#arjun-hrms-greeting').length) return;
@@ -287,7 +293,25 @@
         const $sectionHeading = $('.editor-js-container .codex-editor__redactor > .ce-block').filter(function () {
             return $(this).find('.ce-header').length && $(this).text().trim() === 'Reports & Masters';
         }).first();
-        if (!$sectionHeading.length || $sectionHeading.data('arjunGrouped')) return;
+        if (!$sectionHeading.length) return;
+
+        // Failsafe: arjun_theme.css hides the cards until grouping
+        // finishes (body:has(#arjun-hrms-greeting):not(.arjun-groups-ready)),
+        // to avoid a flash of them in their un-grouped/expanded state. If
+        // grouping never completes for some reason, that would otherwise
+        // hide these cards forever - force them visible after a few
+        // seconds regardless. Scheduled once per heading instance (a
+        // fresh one exists each time this workspace re-renders), not once
+        // per page load, since document.body carries over across
+        // Frappe's SPA route changes.
+        if (!$sectionHeading.data('failsafeScheduled')) {
+            $sectionHeading.data('failsafeScheduled', true);
+            setTimeout(function () {
+                document.body.classList.add('arjun-groups-ready');
+            }, 6000);
+        }
+
+        if ($sectionHeading.data('arjunGrouped')) return;
 
         // Frappe renders the workspace's editorjs blocks (including these
         // widget cards) one at a time as they're constructed, not all at
@@ -348,6 +372,14 @@
                 $(group).toggle(!collapsed);
             });
         }
+
+        // arjun_theme.css hides .links-widget-box cards under
+        // body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) so they
+        // never render in their un-grouped/expanded state before we get a
+        // chance to collapse them - the actual cause of the "shows
+        // expanded first, then collapses" flash. Reveal them now that
+        // grouping is done.
+        document.body.classList.add('arjun-groups-ready');
     };
 
     // Workspaces with children (Accounting, HR, Payroll, ...) render a

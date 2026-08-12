@@ -1619,3 +1619,51 @@ nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)
     font-size: 14px;
     color: #c8cdf0;
 }
+
+/* Collapse/expand toggle for each report/master card group, injected by
+   arjun_theme.js on the Hrms Home workspace only. Sits in front of the
+   heading text (not after), so margin is on the right, not the left. */
+.arjun-collapse-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    margin-right: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: transform 0.2s ease, background-color 0.15s ease;
+}
+
+.arjun-collapse-toggle:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.arjun-collapse-toggle.arjun-collapsed {
+    transform: rotate(-90deg);
+}
+
+/* Sub-heading inserted above each row of 3 report/master cards, e.g.
+   "Settings, Employee & Key Reports" - the whole row (not just the arrow)
+   is clickable to collapse/expand that group. */
+.arjun-group-heading {
+    margin: 20px 0 4px;
+}
+
+.arjun-group-heading-row {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.arjun-group-heading-text {
+    /* Matches the "Reports & Masters" heading's text color. */
+    color: rgb(8, 47, 50);
+    font-size: var(--text-lg);
+    font-weight: 600;
+}

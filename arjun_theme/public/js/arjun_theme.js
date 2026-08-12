@@ -205,6 +205,7 @@
         arjun_theme.setup_responsive_sidebar();
         arjun_theme.setup_sidebar_expand();
         arjun_theme.inject_hrms_home_greeting();
+        arjun_theme.setup_widget_card_collapse();
     };
 
     // Time-of-day greeting banner ("Good Morning, <name>") above the
@@ -245,6 +246,78 @@
             '</div>'
         );
         $page_body.prepend($banner);
+    };
+
+    arjun_theme.collapse_chevron_html = function (extra_class) {
+        return (
+            '<button type="button" class="arjun-collapse-toggle ' + extra_class + '" aria-expanded="true" title="Collapse/expand">' +
+                '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
+            '</button>'
+        );
+    };
+
+    // Groups the report/master cards into their existing rows of 3 (they're
+    // already col-md-4, i.e. 3-per-row) and inserts ONE new sub-heading
+    // above each row - labelled by joining that row's 3 card titles, e.g.
+    // "Settings, Employee & Key Reports" - with a single collapse/expand
+    // toggle controlling all 3 cards in that row together. There is no
+    // per-card toggle; collapsing only ever happens at the row/group level
+    // Each group starts collapsed by default; clicking anywhere on the
+    // heading row (arrow or text) expands/collapses it.
+    arjun_theme.setup_widget_card_collapse = function () {
+        const $title = $('.title-area .title-text').first();
+        if (!$title.length || $title.text().trim() !== 'Hrms Home') return;
+
+        const $sectionHeading = $('.editor-js-container .codex-editor__redactor > .ce-block').filter(function () {
+            return $(this).find('.ce-header').length && $(this).text().trim() === 'Reports & Masters';
+        }).first();
+        if (!$sectionHeading.length || $sectionHeading.data('arjunGrouped')) return;
+
+        const cardBlocks = [];
+        let $sibling = $sectionHeading.next();
+        while ($sibling.length && $sibling.find('.ce-header').length === 0) {
+            if ($sibling.find('.widget.links-widget-box').length) {
+                cardBlocks.push($sibling[0]);
+            }
+            $sibling = $sibling.next();
+        }
+        // Wait for all cards to have actually rendered before grouping -
+        // same staleness trap as the section toggle: if this runs (via the
+        // MutationObserver) while widgets are still loading, we'd only see
+        // a partial list and group them wrong. 38 is the known card count
+        // for this workspace; bail and let a later mutation retry.
+        if (cardBlocks.length < 38) return;
+        $sectionHeading.data('arjunGrouped', true);
+
+        for (let i = 0; i < cardBlocks.length; i += 3) {
+            const group = cardBlocks.slice(i, i + 3);
+            const titles = group.map(function (block) {
+                return $(block).find('.widget-title .ellipsis').first().text().trim();
+            });
+            const heading_text = titles.length > 1
+                ? titles.slice(0, -1).join(', ') + ' & ' + titles[titles.length - 1]
+                : titles[0];
+
+            const $groupHeading = $('<div class="ce-block col-xs-12 arjun-group-heading"><div class="ce-block__content"><div class="arjun-group-heading-row"></div></div></div>');
+            const $toggle = $(arjun_theme.collapse_chevron_html('arjun-group-toggle'));
+            const $text = $('<span class="arjun-group-heading-text"></span>').text(heading_text);
+            const $row = $groupHeading.find('.arjun-group-heading-row').append($toggle, $text);
+
+            // Collapsed by default.
+            $toggle.addClass('arjun-collapsed').attr('aria-expanded', 'false');
+            $(group).hide();
+
+            $(group[0]).before($groupHeading);
+
+            // Bound on the whole row (not just the arrow) so clicking the
+            // heading text also toggles - the arrow is a child of the row,
+            // so its clicks bubble up into this same handler already.
+            $row.on('click', function () {
+                const collapsed = $toggle.toggleClass('arjun-collapsed').hasClass('arjun-collapsed');
+                $toggle.attr('aria-expanded', String(!collapsed));
+                $(group).toggle(!collapsed);
+            });
+        }
     };
 
     // Workspaces with children (Accounting, HR, Payroll, ...) render a

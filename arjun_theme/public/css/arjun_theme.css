@@ -471,7 +471,11 @@ nav .app-logo {
     align-items: center;
     border-bottom: 1px dashed var(--border_color);
     display: flex;
-    height: 56px;
+    /* Matches .navbar's own (separately hardcoded, not variable-driven)
+       height: 48px, so the horizontal line between the logo tile and the
+       sidebar below it lines up with the line between the navbar and the
+       page content next to it, instead of sitting 8px lower. */
+    height: 48px;
     padding: 0 12px;
     white-space: nowrap;
     overflow: hidden;

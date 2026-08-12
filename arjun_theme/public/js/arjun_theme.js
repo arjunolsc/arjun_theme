@@ -332,9 +332,18 @@
         if ($sectionHeading.data('arjunGrouped')) return;
         if ($('.skeleton-card').length > 0) return;
 
+        // A stray empty-text heading block (no visible text at all, so it
+        // isn't noticeable in the page itself) was found sitting between
+        // two sets of cards on the live site, splitting what should be
+        // one continuous run of cards into two - our stop condition here
+        // only treated it as a genuine boundary. Only stop at a heading
+        // that actually has visible text; skip straight past an empty one
+        // and keep collecting.
         const cardBlocks = [];
         let $sibling = $sectionHeading.next();
-        while ($sibling.length && $sibling.find('.ce-header').length === 0) {
+        while ($sibling.length && $sibling.find('.ce-header').filter(function () {
+            return $(this).text().trim() !== '';
+        }).length === 0) {
             if ($sibling.find('.widget.links-widget-box').length) {
                 cardBlocks.push($sibling[0]);
             }

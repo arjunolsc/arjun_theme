@@ -7,6 +7,15 @@
    Uses the same color palette, typography, and design language as the desk.
    ========================================================================== */
 
+/* Shrink the portal UI ~10%, matching the Desk. Uses root font-size (not
+   `zoom`) so 100vh/flex layouts still fill the screen correctly - see
+   arjun_theme.css for why `zoom` was dropped. Note: many rules below are
+   hardcoded px with !important rather than rem, so this covers rem-based
+   sizing app-wide but won't shrink every hardcoded value in this file. */
+html {
+    font-size: 14.4px;
+}
+
 /* -------------------------------------------------------------------------- */
 /* 1. CSS VARIABLES                                                           */
 /* -------------------------------------------------------------------------- */

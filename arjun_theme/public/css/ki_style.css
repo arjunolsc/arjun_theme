@@ -22569,7 +22569,11 @@ body.dark .offer-card-box .text-primary {
 }
 
 @media screen and (max-width: 1399px) {
-  .notifications-list li:last-child {
+  /* Excludes Frappe's own notification tab bar (.notification-item-tabs) -
+     this rule was written for a different, unrelated list component and
+     happens to collide with Frappe's own .notifications-list class, which
+     was incorrectly hiding Frappe's "What's New" tab below 1399px. */
+  .notifications-list li:last-child:not(.notification-item-tabs li) {
     display: none !important;
   }
 }
@@ -22591,7 +22595,10 @@ body.dark .offer-card-box .text-primary {
     font-size: 24px !important;
   }
 
-  .notifications-list li+li {
+  /* Excludes Frappe's own notification tab bar - see note above. Without
+     this, the stray margin-top wrapped the "Events" tab onto its own line
+     between 992px and 1399px viewport widths. */
+  .notifications-list li+li:not(.notification-item-tabs li) {
     margin-top: 0.75rem !important;
   }
 }

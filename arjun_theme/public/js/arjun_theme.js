@@ -261,9 +261,11 @@
     // above each row - labelled by joining that row's 3 card titles, e.g.
     // "Settings, Employee & Key Reports" - with a single collapse/expand
     // toggle controlling all 3 cards in that row together. There is no
-    // per-card toggle; collapsing only ever happens at the row/group level
+    // per-card toggle; collapsing only ever happens at the row/group level.
     // Each group starts collapsed by default; clicking anywhere on the
     // heading row (arrow or text) expands/collapses it.
+    arjun_theme._widget_card_collapse_timer = null;
+
     arjun_theme.setup_widget_card_collapse = function () {
         const $title = $('.title-area .title-text').first();
         if (!$title.length || $title.text().trim() !== 'Hrms Home') return;
@@ -273,6 +275,25 @@
         }).first();
         if (!$sectionHeading.length || $sectionHeading.data('arjunGrouped')) return;
 
+        // Frappe renders the workspace's editorjs blocks (including these
+        // widget cards) one at a time as they're constructed, not all at
+        // once - the page-level loading skeleton (fake placeholder divs,
+        // see workspace_loading_skeleton.html / .skeleton-card) disappears
+        // before that trickle finishes, so "no skeleton left" alone isn't
+        // enough to know every card has arrived. run_patches() re-runs this
+        // on every DOM mutation, so debounce: each call pushes the actual
+        // grouping attempt further out, and it only fires once mutations
+        // stop for a bit - i.e. once the DOM has actually settled.
+        clearTimeout(arjun_theme._widget_card_collapse_timer);
+        arjun_theme._widget_card_collapse_timer = setTimeout(function () {
+            arjun_theme._group_widget_cards($sectionHeading);
+        }, 400);
+    };
+
+    arjun_theme._group_widget_cards = function ($sectionHeading) {
+        if ($sectionHeading.data('arjunGrouped')) return;
+        if ($('.skeleton-card').length > 0) return;
+
         const cardBlocks = [];
         let $sibling = $sectionHeading.next();
         while ($sibling.length && $sibling.find('.ce-header').length === 0) {
@@ -281,12 +302,7 @@
             }
             $sibling = $sibling.next();
         }
-        // Wait for all cards to have actually rendered before grouping -
-        // same staleness trap as the section toggle: if this runs (via the
-        // MutationObserver) while widgets are still loading, we'd only see
-        // a partial list and group them wrong. 38 is the known card count
-        // for this workspace; bail and let a later mutation retry.
-        if (cardBlocks.length < 38) return;
+        if (cardBlocks.length === 0) return;
         $sectionHeading.data('arjunGrouped', true);
 
         for (let i = 0; i < cardBlocks.length; i += 3) {

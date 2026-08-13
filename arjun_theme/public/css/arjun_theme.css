@@ -665,7 +665,16 @@ nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a {
     border-radius: 5px;
     color: var(--font-color);
     display: block;
-    font-size: 15px;
+    /* 15px clips the longest labels ("Shift & Attendance", "Employee
+       Lifecycle") against this row's ~187px available width (nowrap, no
+       ellipsis) - shrunk to fit the worst case (206px content) with a
+       small margin. !important because ki_style.css has its own rule
+       (.app-wrapper .semi-nav:hover .app-nav .main-nav > li a) that only
+       applies while genuinely hovering a collapsed sidebar, has higher
+       specificity (5 class/pseudo-class selectors vs 4 here) and sets
+       font-size: inherit - which resolved to 14px, clipping again, but
+       only in that one hover state. */
+    font-size: 13px !important;
     font-weight: 500;
     margin-bottom: 2px;
     padding: 6px 10px 6px 1.8rem;

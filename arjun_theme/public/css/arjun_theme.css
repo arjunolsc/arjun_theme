@@ -1697,3 +1697,16 @@ nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)
 body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) .editor-js-container .widget.links-widget-box {
     visibility: hidden;
 }
+
+/* The "Share with" dialog's user column (frappe/form/templates/set_sharing.html)
+   renders the user's email as one unbroken string with no wrap/break rule.
+   Long addresses (e.g. dhankharmayank11@gmail.com) overflow past the
+   col-xs-4's 33% width and visually sit on top of the Can Read/Write/Submit/
+   Share checkboxes next to it, since floated columns don't get pushed by an
+   overflowing sibling. Forcing the text to wrap inside its own column keeps
+   it clear of the checkboxes. */
+.shared-user .col-xs-4 {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+}

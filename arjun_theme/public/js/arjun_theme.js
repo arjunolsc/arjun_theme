@@ -206,6 +206,7 @@
         arjun_theme.setup_sidebar_expand();
         arjun_theme.inject_hrms_home_greeting();
         arjun_theme.setup_widget_card_collapse();
+        arjun_theme.inject_sidebar_collapsed_logo();
         arjun_theme.simplify_navbar_search_placeholder();
     };
 
@@ -235,7 +236,14 @@
     // gets replaced), so the banner still shows up immediately rather than
     // waiting on that content to load.
     arjun_theme.inject_hrms_home_greeting = function () {
-        const $title = $('.title-area .title-text').first();
+        // Frappe's SPA keeps every page you've visited mounted in the DOM
+        // (just hidden with display:none) rather than destroying it on
+        // route change, so after switching through a few other modules and
+        // back, more than one ".title-area .title-text" can exist at once.
+        // Without :visible, .first() can grab a leftover hidden page's
+        // title instead of the one actually on screen, fail the "Hrms
+        // Home" check below, and rip out an already-correct banner.
+        const $title = $('.title-area .title-text:visible').first();
         if (!$title.length || $title.text().trim() !== 'Hrms Home') {
             $('#arjun-hrms-greeting').remove();
             // document.body is reused across Frappe's SPA route changes -
@@ -259,10 +267,33 @@
         const full_name = (frappe.boot.user && frappe.boot.user.full_name) || frappe.session.user_fullname || frappe.session.user;
         const today = frappe.datetime.str_to_user(frappe.datetime.get_today());
 
+        // The HR Admin Dashboard (company-wide HR ops - headcount, today's
+        // attendance, pending approvals, birthdays/anniversaries) is only
+        // useful to - and only readable by - HR/System Manager staff; the
+        // www controller behind /admin-dashboard enforces the same role
+        // check server-side, this just keeps the button from being shown
+        // to people who'd hit a redirect anyway.
+        const can_see_admin_dashboard = frappe.user.has_role(['System Manager', 'HR Manager', 'Administrator']);
+        const admin_btn_html = can_see_admin_dashboard
+            ? '<a href="/admin-dashboard" class="arjun-hrms-dashboard-btn">' +
+                '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="7.5" r="3"/><path d="M3 19c1.2-3.4 3.6-5.1 6-5.1s4.8 1.7 6 5.1" stroke-linecap="round"/><path d="M16 8v4M14 10h4" stroke-linecap="round"/></svg>' +
+                '<span>Admin Dashboard</span>' +
+              '</a>'
+            : '';
+
         const $banner = $(
             '<div id="arjun-hrms-greeting" class="arjun-hrms-greeting">' +
-                '<h2>' + frappe.utils.escape_html(greeting) + ', ' + frappe.utils.escape_html(full_name) + '</h2>' +
-                '<div class="arjun-hrms-greeting-date">' + frappe.utils.escape_html(today) + '</div>' +
+                '<div class="arjun-hrms-greeting-text">' +
+                    '<h2>' + frappe.utils.escape_html(greeting) + ', ' + frappe.utils.escape_html(full_name) + '</h2>' +
+                    '<div class="arjun-hrms-greeting-date">' + frappe.utils.escape_html(today) + '</div>' +
+                '</div>' +
+                '<div class="arjun-hrms-greeting-actions">' +
+                    admin_btn_html +
+                    '<a href="/ess-dashboard" class="arjun-hrms-dashboard-btn">' +
+                        '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>' +
+                        '<span>Dashboard</span>' +
+                    '</a>' +
+                '</div>' +
             '</div>'
         );
         $main_section.prepend($banner);
@@ -287,7 +318,8 @@
     arjun_theme._widget_card_collapse_timer = null;
 
     arjun_theme.setup_widget_card_collapse = function () {
-        const $title = $('.title-area .title-text').first();
+        // Same stale-hidden-page hazard as inject_hrms_home_greeting() above.
+        const $title = $('.title-area .title-text:visible').first();
         if (!$title.length || $title.text().trim() !== 'Hrms Home') return;
 
         const $sectionHeading = $('.editor-js-container .codex-editor__redactor > .ce-block').filter(function () {
@@ -413,6 +445,21 @@
                 $li.children('.sidebar-child-nav').addClass('expanded');
             }
         });
+    };
+
+    // The sidebar's collapsed (semi-nav) rail is too narrow for the full
+    // wide "one" wordmark logo - object-fit:contain shrinks the whole
+    // 144x42 image down to fit, leaving a thin sliver with mostly empty
+    // space (see arjun_theme.css around .arjun-collapsed-logo-icon for the
+    // full story). Fix: add a second <img>, right next to the original,
+    // pointing at a dedicated square icon-only mark - CSS alone then swaps
+    // which one is visible based on the sidebar's semi-nav/:hover state,
+    // so hover-to-expand still shows the real wordmark exactly as before.
+    arjun_theme.inject_sidebar_collapsed_logo = function () {
+        const $wideLogo = $('nav.vertical-sidebar .app-logo .logo img').not('.arjun-collapsed-logo-icon').first();
+        if (!$wideLogo.length) return;
+        if ($wideLogo.siblings('.arjun-collapsed-logo-icon').length) return;
+        $('<img class="arjun-collapsed-logo-icon" src="/assets/arjun_theme/images/om_icon_mark.svg" alt="OM">').insertAfter($wideLogo);
     };
 
     arjun_theme.mutate_number_cards = function () {
@@ -572,6 +619,39 @@
                         chart.options.lineOptions.hideDots = 1;
                         chart.options.lineOptions.regionFill = 0;
                         chart.draw(); // Redraws with splines correctly!
+                    }
+                }
+
+                // The stock "Shift Assignment Breakup" pie chart (Attendance
+                // Dashboard) draws its legend as raw SVG text: frappe-charts
+                // lays legend items out in fixed 150px-wide columns
+                // (renderLegend: Math.floor(this.width/150) items per row),
+                // regardless of each label's actual rendered width. Our
+                // Shift Type names ("Evening Shift 1:30PM", "Night Shift
+                // 10:30PM to 8AM", ...) render wider than that column, so
+                // adjacent items visually overlap. Rather than patch the
+                // vendor chart library, hide its SVG legend for this one
+                // widget and grow a plain-HTML legend from the same chart
+                // instance's own data/colors - normal HTML text wraps
+                // cleanly with no special-casing needed.
+                if (chart && !chart._arjun_legend_fixed) {
+                    let widget = container.closest('[data-widget-name="Shift Assignment Breakup"]');
+                    if (widget) {
+                        let labels = (chart.data && chart.data.labels) || [];
+                        let values = (chart.data && chart.data.datasets && chart.data.datasets[0] && chart.data.datasets[0].values) || [];
+                        let colors = chart.colors || [];
+                        if (labels.length) {
+                            chart._arjun_legend_fixed = true;
+                            if (chart.legendArea) chart.legendArea.style.display = 'none';
+                            $(widget).find('.arjun-shift-breakup-legend').remove();
+                            let items = labels.map((label, i) => `
+                                <div class="arjun-shift-breakup-legend-item">
+                                    <span class="arjun-shift-breakup-legend-dot" style="background:${colors[i] || '#ccc'}"></span>
+                                    <span class="arjun-shift-breakup-legend-label">${frappe.utils.escape_html(label)}</span>
+                                    <span class="arjun-shift-breakup-legend-value">${values[i] != null ? values[i] : ''}</span>
+                                </div>`).join('');
+                            $(`<div class="arjun-shift-breakup-legend">${items}</div>`).insertAfter($(container));
+                        }
                     }
                 }
             } catch (e) { }

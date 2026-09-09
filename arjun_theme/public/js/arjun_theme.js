@@ -1036,7 +1036,12 @@
         $widget.on('click', '.arjun-social-comment-delete', function (e) {
             const parts = $(this).attr('data-delete-comment').split('|');
             const postName = parts[0], commentName = parts[1];
-            if (!window.confirm('Delete this comment?')) return;
+            // frappe.confirm() (a real Dialog), not window.confirm() - the
+            // native browser confirm can be permanently silenced by a
+            // "prevent this page from creating additional dialogs"
+            // checkbox a user might tick without meaning to, after which
+            // it just returns false forever with no visible dialog at all.
+            frappe.confirm(__('Delete this comment?'), function () {
             frappe.call({
                 method: 'olscpl_hrms.api.social_feed.delete_comment',
                 args: { name: commentName },
@@ -1047,6 +1052,7 @@
                     arjun_theme._social_patch_comments(postName);
                     arjun_theme._social_patch_comment_count(postName);
                 },
+            });
             });
         });
 

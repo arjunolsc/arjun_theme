@@ -1695,6 +1695,460 @@ nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)
     color: #ffffff;
 }
 
+/* Explore (left) / Social Posts (right), side by side - built by
+   setup_explore_social_split() in arjun_theme.js, which physically moves
+   Explore's own heading+cards into .arjun-split-left; "Reports & Masters"
+   and everything after it is untouched, still directly below this row in
+   normal document flow. */
+.arjun-explore-social-split { display: flex; gap: 28px; align-items: flex-start; margin-bottom: 4px; }
+/* Explore gets the bigger half, Social Posts the smaller - calc()
+   accounts for the parent's 28px gap so the two still sum to exactly
+   100% instead of overflowing it. */
+.arjun-split-left { flex: 0 0 calc(62% - 14px); max-width: calc(62% - 14px); min-width: 0; }
+.arjun-split-right { flex: 0 0 calc(38% - 14px); max-width: calc(38% - 14px); min-width: 0; }
+/* Explore's cards rely on Bootstrap-style col-* classes for their grid,
+   which only lay out correctly inside a flex-wrap row - the same display
+   the blocks originally had as direct children of .codex-editor__redactor
+   (confirmed via getComputedStyle in devtools), replicated here since
+   they're no longer inside that container. */
+.arjun-split-left { display: flex; flex-wrap: wrap; }
+/* Bootstrap's col-lg-3/col-md-4 classes are viewport-breakpoint-based, not
+   aware of their actual parent's width - at a wide viewport they still
+   claim 25%/33% flex-basis even though .arjun-split-left is now narrower
+   than the full page, so cards kept trying to cram 3-4 per row into less
+   room than they need, clipping badges and text. Force a clean 2-per-row
+   instead, sized for what this column actually has. */
+.arjun-split-left > .ce-block:has(.shortcut-widget-box) {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+}
+/* Scaled up from the stock 68px/14.4px/18px so 4 rows of 2 cards actually
+   fill this wider column's height instead of leaving empty space above
+   "Reports & Masters" - only inside the split's left half, the Explore
+   cards everywhere else (workspaces without this split) are untouched. */
+.arjun-split-left .shortcut-widget-box { min-height: 108px !important; padding: 1.7rem 1.5rem !important; }
+.arjun-split-left .shortcut-widget-box .widget-title { font-size: 16.5px !important; }
+.arjun-split-left .shortcut-widget-box .widget-control svg.es-icon { width: 22px !important; height: 22px !important; }
+@media (max-width: 900px) {
+    .arjun-explore-social-split { flex-direction: column; }
+    .arjun-split-left, .arjun-split-right { flex: 1 1 100%; max-width: 100%; }
+}
+
+/* Section heading above the widget, matching the same visual weight
+   Frappe's own workspace section headings ("Explore", "Reports & Masters")
+   use (.ce-header .h4 -> get_textstyle("xl", "semibold") in desktop.scss)
+   so this reads as a first-class section of the page, not a stray card. */
+.arjun-social-heading {
+    /* Matched to "Explore"'s own rendered heading (17.1px/700/#082f32 -
+       an editorjs header block's bare <b>, not a fixed design-system
+       size), not an approximation, so this reads as the exact same
+       section-heading style rather than close-but-different. */
+    font-size: 17.1px;
+    font-weight: 700;
+    color: #082f32;
+    /* The "Explore" heading sits inside an editor.js block that carries its
+       own top/bottom spacing (ce-block padding), which this bare <h4> next
+       to it doesn't have - so without compensating, "Social Posts" and its
+       composer card start a few pixels higher than "Explore" and its first
+       card. Top/bottom margin measured against the live "Explore" block
+       (getBoundingClientRect diff) so both column headings - and the row
+       right below them - line up at the same y instead of just being close. */
+    margin: 7px 0 14px;
+}
+
+/* Social feed widget (Hrms Home, above Explore) - composer + latest-3
+   preview of /social-feed, injected by arjun_theme.js right after the
+   greeting banner. Colors match the softened palette already used across
+   ess_dashboard/admin_dashboard (see their :root tokens). */
+.arjun-social-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px;
+    margin: 0 0 20px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.08);
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    animation: arjun-social-card-in 0.35s ease both;
+}
+/* The card's own height stays fixed (composer + a bounded amount of feed)
+   instead of growing however tall a post with several images happens to
+   be - the composer itself is left out of this (not wrapped in the
+   scrolling box) since the emoji popover needs to escape any overflow
+   clipping on its container, same reasoning as the composer's own
+   overflow:visible further down. */
+#arjun-social-posts-region {
+    max-height: 460px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+.arjun-social-card:has(.arjun-social-composer-row:focus-within) {
+    border-color: #c7cdf5;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -12px rgba(100, 109, 196, 0.28);
+}
+@keyframes arjun-social-card-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.arjun-social-composer-row {
+    display: flex;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: border-color 0.25s ease;
+}
+.arjun-social-composer-row:focus-within { border-bottom-color: #dfe3fa; }
+.arjun-social-avatar {
+    border-radius: 50%;
+    flex-shrink: 0;
+    object-fit: cover;
+    background: #eef2ff;
+    color: #646dc4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #eef2ff;
+}
+.arjun-social-composer-main { flex: 1; min-width: 0; position: relative; }
+/* Pure trigger now, not an editable field - clicking it (or either tool
+   icon, or Post) opens the real compose dialog, see
+   .arjun-social-compose-dialog below. */
+.arjun-social-composer-trigger {
+    width: 100%;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #94a3b8;
+    min-height: 40px;
+    padding: 8px 0;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+.arjun-social-composer-trigger:hover { color: #64748b; }
+.arjun-social-preview-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px; }
+.arjun-social-preview {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    animation: arjun-social-pop-in 0.2s ease both;
+}
+.arjun-social-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: block; }
+@keyframes arjun-social-pop-in {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+}
+.arjun-social-preview-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.65);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 15px;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.arjun-social-preview-remove:hover { background: #c0596a; transform: scale(1.08); }
+.arjun-social-composer-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.arjun-social-tools { display: flex; align-items: center; gap: 2px; }
+.arjun-social-tool-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #646dc4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.arjun-social-tool-btn svg { width: 17px; height: 17px; }
+.arjun-social-tool-btn:hover { background: #eef2ff; transform: scale(1.08); }
+.arjun-social-tool-btn:active { transform: scale(0.94); }
+.arjun-social-tool-btn:disabled { color: #cbd5e1; cursor: not-allowed; }
+.arjun-social-tool-btn:disabled:hover { background: none; transform: none; }
+.arjun-social-post-btn {
+    padding: 7px 20px;
+    border-radius: 999px;
+    border: none;
+    background: #3b5bdb;
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.arjun-social-post-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px -6px rgba(59, 91, 219, 0.5); }
+.arjun-social-post-btn:active:not(:disabled) { transform: translateY(0) scale(0.97); }
+.arjun-social-post-btn:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
+.arjun-social-hint { font-size: 11.5px; color: #64748b; margin-top: 4px; }
+
+.arjun-social-emoji-pop {
+    position: absolute;
+    z-index: 20;
+    top: 36px;
+    left: 0;
+    width: 240px;
+    max-height: 180px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px -10px rgba(15, 23, 42, 0.25);
+    padding: 6px;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    transform-origin: top left;
+    animation: arjun-social-pop-open 0.15s ease both;
+}
+@keyframes arjun-social-pop-open {
+    from { opacity: 0; transform: scale(0.9) translateY(-4px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.arjun-social-emoji-pop button {
+    border: none;
+    background: none;
+    font-size: 18px;
+    padding: 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.12s ease, transform 0.12s ease;
+}
+.arjun-social-emoji-pop button:hover { background: #f1f5f9; transform: scale(1.15); }
+
+.arjun-social-posts-label {
+    margin-top: 16px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.arjun-social-posts { margin-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+.arjun-social-post {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 9px 8px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.arjun-social-post:hover { background: #f8fafc; transform: translateX(2px); }
+/* Announcement posts get a soft amber wash instead of just a badge, so
+   they read as visually distinct in the feed at a glance, not just on
+   close reading - regular posts immediately above/below stay unstyled,
+   so the feed still flows as one continuous list, per the "then below
+   post continues" request. */
+.arjun-social-post.is-announcement {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+}
+.arjun-social-post.is-announcement:hover { background: #fef3c7; }
+.arjun-social-announcement-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: 999px;
+    padding: 2px 10px;
+    margin-bottom: 6px;
+}
+.arjun-social-subtopic-tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #4338ca;
+    background: #eef2ff;
+    border-radius: 999px;
+    padding: 2px 10px;
+    margin-bottom: 6px;
+    margin-right: 6px;
+}
+.arjun-social-post-body { flex: 1; min-width: 0; }
+.arjun-social-post-head { display: flex; align-items: baseline; gap: 6px; font-size: 13px; }
+.arjun-social-post-head b { color: #0f172a; }
+.arjun-social-post-head span { color: #94a3b8; font-size: 11.5px; }
+/* Full post content now (not a 2-line clamp + tiny 48px thumbnail) -
+   this preview shows the whole post, same as the full /social-feed page. */
+.arjun-social-post-text {
+    font-size: 13.5px;
+    color: #334155;
+    margin-top: 3px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+/* Content is now rich HTML from the compose dialog's Text Editor field
+   (paragraphs/lists/etc, not raw text) - browser default block spacing on
+   these tags is huge next to a compact 13.5px post, so it's flattened
+   back down to read as one continuous block like a plain post would. */
+.arjun-social-post-text p,
+.arjun-social-post-text ol,
+.arjun-social-post-text ul,
+.arjun-social-post-text blockquote,
+.arjun-social-post-text h1,
+.arjun-social-post-text h2,
+.arjun-social-post-text h3,
+.arjun-social-post-text h4,
+.arjun-social-post-text h5,
+.arjun-social-post-text h6 { margin: 0 0 6px; }
+.arjun-social-post-text > :last-child { margin-bottom: 0; }
+.arjun-social-post-text ol, .arjun-social-post-text ul { padding-left: 1.4em; }
+.arjun-social-post-text a { color: #3b5bdb; }
+.arjun-social-post-text img { max-width: 100%; border-radius: 8px; }
+.arjun-social-post-actions {
+    display: flex; align-items: center; gap: 4px;
+    margin-top: 10px; padding-top: 8px; border-top: 1px solid #f1f5f9;
+}
+.arjun-social-meta-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #94a3b8;
+}
+.arjun-social-meta-stat svg { width: 13px; height: 13px; }
+/* The like/comment stats are real <button>s now (liking works, and
+   comments expand, right from this preview) - reset them back to looking
+   like plain text stats, then layer their own hover/liked states on top. */
+.arjun-social-like-btn, .arjun-social-comment-btn {
+    border: none;
+    background: none;
+    padding: 5px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.arjun-social-comment-btn:hover { background: #eef2ff; color: #646dc4; }
+/* Instagram's own like-heart red, not the app's softened rose - a like
+   button reads as a very specific, recognizable convention and a muted
+   tone undersells the "you liked this" feedback. */
+.arjun-social-like-btn:hover { background: #fff0f1; color: #ff3040; transform: scale(1.06); }
+.arjun-social-like-btn:active { transform: scale(0.94); }
+.arjun-social-like-btn.liked { color: #ff3040; }
+.arjun-social-like-btn.liked svg { fill: #ff3040; }
+.arjun-social-empty { text-align: center; padding: 14px; color: #94a3b8; font-size: 13px; }
+
+/* Same Twitter-style image grid as the full feed's .sf-post-images. */
+.arjun-social-post-images { margin-top: 10px; border-radius: 10px; overflow: hidden; display: grid; gap: 3px; }
+.arjun-social-post-images img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.arjun-social-post-images-1 { grid-template-columns: 1fr; }
+.arjun-social-post-images-1 img { max-height: 340px; }
+.arjun-social-post-images-2 { grid-template-columns: 1fr 1fr; }
+.arjun-social-post-images-2 img { height: 200px; }
+.arjun-social-post-images-3 { grid-template-columns: 1.2fr 1fr; grid-template-rows: 1fr 1fr; }
+.arjun-social-post-images-3 img:first-child { grid-row: 1 / 3; height: 100%; }
+.arjun-social-post-images-3 img { height: 99.5px; }
+.arjun-social-post-images-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.arjun-social-post-images-4 img { height: 140px; }
+
+/* Attachment chips as real links here (vs. the composer's version above,
+   which has a remove button instead of an Open pill). */
+.arjun-social-attachment-chip-link {
+    cursor: pointer; text-decoration: none; color: inherit;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.arjun-social-attachment-chip-link:hover { background: #f1f5f9; transform: translateX(2px); }
+.arjun-social-attachment-open {
+    flex-shrink: 0; font-size: 11px; font-weight: 700; color: #646dc4;
+    padding: 4px 10px; border-radius: 999px; background: #eef2ff;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+.arjun-social-attachment-chip-link:hover .arjun-social-attachment-open { background: #646dc4; color: #fff; }
+
+/* Inline comment thread - same bubble pattern as the full feed's
+   .sf-comment*, sized down slightly for the compact widget. */
+.arjun-social-comments { margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; }
+.arjun-social-comment { display: flex; gap: 8px; margin-bottom: 8px; }
+.arjun-social-comment-bubble { flex: 1; min-width: 0; background: #f1f5f9; border-radius: 12px; padding: 7px 11px; }
+.arjun-social-comment-author { font-size: 12px; font-weight: 700; color: #0f172a; }
+.arjun-social-comment-text { font-size: 12.5px; color: #334155; margin-top: 1px; white-space: pre-wrap; word-wrap: break-word; }
+.arjun-social-comment-delete {
+    align-self: flex-start; flex-shrink: 0; border: none; background: none; cursor: pointer;
+    color: #94a3b8; font-size: 15px; line-height: 1; padding: 3px; border-radius: 6px;
+}
+.arjun-social-comment-delete:hover { background: #f1f5f9; color: #ff3040; }
+.arjun-social-comment-form { display: flex; gap: 8px; }
+.arjun-social-comment-input {
+    flex: 1; min-width: 0; border: 1px solid #e2e8f0; border-radius: 999px; padding: 7px 12px;
+    font-size: 12.5px; font-family: inherit; outline: none; transition: border-color 0.15s ease;
+}
+.arjun-social-comment-input:focus { border-color: #c7cdf5; }
+.arjun-social-comment-send {
+    flex-shrink: 0; border: none; background: #646dc4; color: #fff; border-radius: 999px;
+    padding: 0 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+
+/* Non-image attachments (PDF, Excel, Word, ...) in the composer - a
+   clickable-looking file chip rather than a thumbnail, since there's
+   nothing to preview. */
+.arjun-social-attachment-list { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 8px; }
+.arjun-social-attachment-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+.arjun-social-attachment-icon { font-size: 18px; flex-shrink: 0; line-height: 1; }
+.arjun-social-attachment-info { flex: 1; min-width: 0; }
+.arjun-social-attachment-name { font-size: 12.5px; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arjun-social-attachment-size { font-size: 11px; color: #64748b; margin-top: 1px; }
+.arjun-social-attachment-chip .arjun-social-preview-remove { position: static; flex-shrink: 0; }
+
+.arjun-social-view-all {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 10px;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #3b5bdb;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+.arjun-social-view-all svg { width: 15px; height: 15px; transition: transform 0.2s ease; }
+.arjun-social-view-all:hover { background: #eef2ff; color: #3b5bdb; }
+.arjun-social-view-all:hover svg { transform: translateX(3px); }
+
+/* Compose dialog (frappe.ui.Dialog) - subtopic + announcement + the Text
+   Editor's own formatting toolbar + image/attachment upload, opened by
+   clicking the composer trigger above. Just widens the stock dialog and
+   gives the reused preview-grid/attachment-chip/emoji-pop pieces (same
+   classes/styles as the widget's old inline composer) a bit of breathing
+   room above the dialog's own footer buttons. */
+.arjun-social-compose-dialog .modal-dialog { max-width: 640px; }
+.arjun-social-compose-dialog .ql-editor { min-height: 140px; font-size: 14px; }
+.arjun-social-compose-dialog #arjun-compose-upload-region { margin-top: 10px; position: relative; }
+.arjun-social-compose-dialog .arjun-compose-dialog-tools { margin-top: 8px; }
+.arjun-social-compose-dialog .checkbox { margin-bottom: 0; }
+
 /* Collapse/expand toggle for each report/master card group, injected by
    arjun_theme.js on the Hrms Home workspace only. Sits in front of the
    heading text (not after), so margin is on the right, not the left. */
@@ -1752,6 +2206,19 @@ nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)
    that workspace only - every other workspace's cards render normally,
    unaffected. */
 body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) .editor-js-container .widget.links-widget-box {
+    visibility: hidden;
+}
+
+/* Same reasoning, extended to the Explore/Social Posts split: without
+   this, the page briefly shows Explore in its original full-width,
+   4-per-row layout (with no Social Posts alongside it, since that widget
+   only gets built once the split's right column exists) and then visibly
+   reflows into the two-column layout once arjun_theme.js's debounced
+   setup_explore_social_split() finishes. Hiding the *entire* redactor -
+   not just the cards, like the rule above - means nothing in that region
+   renders in an intermediate state at all; it all appears at once, fully
+   formed, exactly like the rule above already does for card grouping. */
+body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) .editor-js-container .codex-editor__redactor {
     visibility: hidden;
 }
 

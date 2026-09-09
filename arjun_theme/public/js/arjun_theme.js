@@ -205,6 +205,8 @@
         arjun_theme.setup_responsive_sidebar();
         arjun_theme.setup_sidebar_expand();
         arjun_theme.inject_hrms_home_greeting();
+        arjun_theme.setup_explore_social_split();
+        arjun_theme.setup_social_feed_widget();
         arjun_theme.setup_widget_card_collapse();
         arjun_theme.inject_sidebar_collapsed_logo();
         arjun_theme.simplify_navbar_search_placeholder();
@@ -247,11 +249,15 @@
         if (!$title.length || $title.text().trim() !== 'Hrms Home') {
             $('#arjun-hrms-greeting').remove();
             // document.body is reused across Frappe's SPA route changes -
-            // reset this so the hide-until-grouped CSS (scoped to
+            // reset this so the hide-until-ready CSS (scoped to
             // body:has(#arjun-hrms-greeting)) protects against the flash
             // again next time the user navigates back to Hrms Home,
             // instead of the class staying set from this visit forever.
             document.body.classList.remove('arjun-groups-ready');
+            arjun_theme._split_done = false;
+            arjun_theme._groups_done = false;
+            arjun_theme._widget_done = false;
+            arjun_theme._reveal_failsafe_scheduled = false;
             return;
         }
         if ($('#arjun-hrms-greeting').length) return;
@@ -297,6 +303,759 @@
             '</div>'
         );
         $main_section.prepend($banner);
+    };
+
+    // ---- Social feed widget (Hrms Home, above Explore) ----
+    // A compact composer + latest-3-posts preview of the full /social-feed
+    // page (olscpl_hrms.api.social_feed) - not interactive beyond posting
+    // and the emoji/image tools; liking, commenting, and the HR approval
+    // queue all live on the full page, linked via "View Social Feed".
+    arjun_theme.SOCIAL_EMOJIS = [
+        '😀', '😁', '😂', '🤣', '😊', '😍', '😘',
+        '😎', '🤔', '😅', '😢', '😭', '😡', '🥳',
+        '👍', '👎', '👏', '🙌', '🤝', '💪', '🙏',
+        '❤️', '🔥', '🎉', '✨', '🌟', '💯', '⭐',
+        '🚀', '📢', '📌', '✅', '❌', '⚡', '🎯',
+    ];
+
+    // Same clean line-icon set as /social-feed's own ICONS object (raw
+    // emoji glyphs like 🙂/🖼 for the toolbar buttons themselves render
+    // inconsistently across platforms and look out of place next to the
+    // rest of the flat UI - these render identically everywhere).
+    arjun_theme.SOCIAL_ICONS = {
+        emoji: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8.5 14s1.3 2 3.5 2 3.5-2 3.5-2" stroke-linecap="round"/><path d="M8.5 9.5h.01M15.5 9.5h.01" stroke-linecap="round" stroke-linewidth="2.5"/></svg>',
+        image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 3.5 3.5L17 11l3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20.5s-7.5-4.6-10-9.3C0.3 7.8 2 4.5 5.3 4c2-.3 3.9.6 5 2.2.9-1.6 3-2.5 5-2.2 3.3.5 5 3.8 3.3 7.2-2.5 4.7-10 9.3-10 9.3Z" stroke-linejoin="round"/></svg>',
+        comment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v12H8l-4 4V4Z" stroke-linejoin="round"/></svg>',
+        arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    };
+
+    arjun_theme.SOCIAL_MAX_IMAGES = 6; // matches MAX_IMAGES_PER_POST in olscpl_hrms/api/social_feed.py
+    arjun_theme.SOCIAL_MAX_ATTACHMENTS = 6; // matches MAX_ATTACHMENTS_PER_POST
+
+    arjun_theme._social_is_image_file = function (file) { return /^image\//.test(file.type); };
+
+    arjun_theme._social_format_size = function (bytes) {
+        if (bytes == null) return '';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    };
+
+    arjun_theme._social_file_icon = function (filename) {
+        const ext = (filename.split('.').pop() || '').toLowerCase();
+        if (ext === 'pdf') return '📄';
+        if (['doc', 'docx'].indexOf(ext) !== -1) return '📝';
+        if (['xls', 'xlsx', 'csv'].indexOf(ext) !== -1) return '📊';
+        if (['ppt', 'pptx'].indexOf(ext) !== -1) return '📑';
+        if (['zip', 'rar', '7z'].indexOf(ext) !== -1) return '🗜️';
+        return '📎';
+    };
+
+    // Composing (text/images/attachments/emoji) is now entirely local to
+    // whichever compose dialog is open (see _open_social_compose_dialog) -
+    // this only tracks the widget's own persistent post list and the
+    // inline comment-thread UI, since those need to survive across dialog
+    // opens/closes.
+    arjun_theme._social_state = {
+        me: { name: '', image: null },
+        posts: [],
+        loaded: false,
+        canApprove: false,
+        expanded: {}, // postName -> bool (inline comment thread open)
+        comments: {}, // postName -> [...] (null while loading)
+        commentDraft: {}, // postName -> in-progress comment text
+    };
+
+    arjun_theme._social_find_post = function (name) {
+        return arjun_theme._social_state.posts.find(function (p) { return p.name === name; });
+    };
+
+    arjun_theme._social_avatar_html = function (author, size) {
+        size = size || 36;
+        if (author && author.image) {
+            return '<img class="arjun-social-avatar" style="width:' + size + 'px;height:' + size + 'px" src="' + frappe.utils.escape_html(author.image) + '">';
+        }
+        var initials = ((author && author.name) || '').split(' ').filter(Boolean).slice(0, 2).map(function (p) { return p[0].toUpperCase(); }).join('');
+        return '<div class="arjun-social-avatar" style="width:' + size + 'px;height:' + size + 'px">' + frappe.utils.escape_html(initials) + '</div>';
+    };
+
+    arjun_theme._social_relative_time = function (iso) {
+        if (!iso) return '';
+        var then = new Date(iso.replace(' ', 'T'));
+        if (isNaN(then.getTime())) return '';
+        var diff = Math.max(0, (Date.now() - then.getTime()) / 1000);
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return Math.floor(diff / 86400) + 'd ago';
+    };
+
+    // Moves the workspace's own "Explore" heading + its shortcut cards out
+    // of the flat block list they normally sit in (alongside "Reports &
+    // Masters" etc.) and into the left half of a two-column row, leaving
+    // an empty right half for setup_social_feed_widget() to fill with
+    // "Social Posts" - "Reports & Masters" and everything after it just
+    // naturally follows in the same DOM position it always has, untouched.
+    //
+    // Reused pattern from _group_widget_cards below: editorjs renders its
+    // blocks progressively (not all at once), and re-renders the whole
+    // list from scratch on every workspace revisit (this.editor.render()
+    // in workspace.js) - so this has to be idempotent and safe to call
+    // repeatedly, and a stray empty-text heading block only counts as a
+    // boundary once it actually has visible text.
+    arjun_theme._explore_split_timer = null;
+
+    // Three independent things all have to finish before it's safe to
+    // reveal the workspace content (arjun-groups-ready, added by whichever
+    // of these three runs last): the Explore/Social Posts split, the
+    // Reports & Masters card grouping, and the Social Posts widget itself
+    // actually being inserted into the split's right column - each has
+    // its own async/debounced completion, and revealing on any one of
+    // them alone would just trade one flash for a different one (e.g. an
+    // empty right column popping the widget in a beat after everything
+    // else already appeared).
+    arjun_theme._split_done = false;
+    arjun_theme._groups_done = false;
+    arjun_theme._widget_done = false;
+    arjun_theme._reveal_failsafe_scheduled = false;
+
+    arjun_theme._maybe_reveal_workspace = function () {
+        if (arjun_theme._split_done && arjun_theme._groups_done && arjun_theme._widget_done) {
+            document.body.classList.add('arjun-groups-ready');
+        }
+    };
+
+    arjun_theme.setup_explore_social_split = function () {
+        const $title = $('.title-area .title-text:visible').first();
+        if (!$title.length || $title.text().trim() !== 'Hrms Home') return;
+        if ($('.arjun-explore-social-split').length) return; // already split this render
+        if ($('.skeleton-card').length > 0) return; // still loading - try again next patch cycle
+
+        // Failsafe: if any of the three pieces above never actually
+        // completes for some reason, that would otherwise hide the whole
+        // workspace forever - force it visible after a few seconds
+        // regardless, same safety net setup_widget_card_collapse already
+        // has for grouping alone. Scheduled once per Hrms Home visit (the
+        // flags above get reset when navigating away), not once per page
+        // load, since document.body carries over across route changes.
+        if (!arjun_theme._reveal_failsafe_scheduled) {
+            arjun_theme._reveal_failsafe_scheduled = true;
+            setTimeout(function () {
+                document.body.classList.add('arjun-groups-ready');
+            }, 6000);
+        }
+
+        // editorjs renders its blocks one at a time, not all at once, and
+        // run_patches() re-runs this on every one of those mutations -
+        // debounce so the actual move only happens once the DOM has
+        // settled, not mid-trickle. This matters even more here than for
+        // _group_widget_cards below: moving a block editorjs still
+        // considered its "last rendered" node mid-render made every block
+        // it inserted *after* that point land inside the moved node's new
+        // location instead of back in the redactor's own flat list -
+        // "Reports & Masters" and everything after it silently vanished
+        // from the visible page even though nothing had actually deleted it.
+        clearTimeout(arjun_theme._explore_split_timer);
+        arjun_theme._explore_split_timer = setTimeout(arjun_theme._do_explore_social_split, 500);
+    };
+
+    arjun_theme._do_explore_social_split = function () {
+        if ($('.arjun-explore-social-split').length) return;
+
+        const $exploreHeading = $('.editor-js-container .codex-editor__redactor > .ce-block').filter(function () {
+            return $(this).find('.ce-header').length && $(this).text().trim() === 'Explore';
+        }).first();
+        if (!$exploreHeading.length) return;
+
+        const cardBlocks = [];
+        let $sibling = $exploreHeading.next();
+        while ($sibling.length && $sibling.find('.ce-header').filter(function () {
+            return $(this).text().trim() !== '';
+        }).length === 0) {
+            if ($sibling.find('.shortcut-widget-box').length) cardBlocks.push($sibling[0]);
+            $sibling = $sibling.next();
+        }
+        // Ran out of siblings without ever reaching another heading -
+        // rendering genuinely isn't finished yet (there's always at least
+        // "Reports & Masters" after Explore on this workspace). Bail
+        // without moving anything and let the next debounced call retry
+        // once more blocks have actually arrived.
+        if (!$sibling.length) return;
+        if (cardBlocks.length === 0) return;
+
+        const $split = $(
+            '<div class="ce-block col-xs-12 arjun-explore-social-split">' +
+            '<div class="arjun-split-left"></div>' +
+            '<div class="arjun-split-right"></div>' +
+            '</div>'
+        );
+        $exploreHeading.before($split);
+        // .append() with real elements *moves* them here, not clones -
+        // Explore's heading and cards leave their original spot entirely.
+        $split.find('.arjun-split-left').append($exploreHeading, cardBlocks);
+        // .arjun-split-right is left empty here for setup_social_feed_widget().
+
+        arjun_theme._split_done = true;
+        arjun_theme._maybe_reveal_workspace();
+    };
+
+    arjun_theme.setup_social_feed_widget = function () {
+        const $title = $('.title-area .title-text:visible').first();
+        if (!$title.length || $title.text().trim() !== 'Hrms Home') {
+            $('#arjun-social-widget').remove();
+            $('.arjun-social-heading').remove();
+            return;
+        }
+
+        if ($('#arjun-social-widget').length) return;
+
+        // setup_explore_social_split() builds this - it runs first in
+        // run_patches(), but on a slow/first render it may not have found
+        // the Explore heading yet; bail and let the next patch cycle
+        // (MutationObserver fires on every DOM change) retry both in order.
+        const $splitRight = $('.arjun-split-right');
+        if (!$splitRight.length) return;
+
+        // Two independently-patchable regions instead of one blob: typing
+        // an emoji or attaching a file only ever needs to touch the
+        // composer, and a new post only ever needs to touch the list -
+        // rebuilding (and event-rebinding) the *entire* widget for either
+        // was the same "whole container flashes" bug the full /social-feed
+        // page had, just scoped to this smaller card instead of the page.
+        const $widget = $(
+            '<h4 class="arjun-social-heading">Social Posts</h4>' +
+            '<div id="arjun-social-widget"><div class="arjun-social-card">' +
+            '<div id="arjun-social-composer-region"></div>' +
+            '<div id="arjun-social-posts-region"></div>' +
+            '</div></div>'
+        );
+        $splitRight.append($widget);
+
+        arjun_theme._render_social_composer();
+        arjun_theme._render_social_posts();
+        arjun_theme._bind_social_widget_events();
+
+        // The widget structure itself (composer + a "Loading posts..."
+        // placeholder) is what needs to exist before reveal, not the
+        // actual post data - that arrives async below and is fine to show
+        // as its own brief loading state same as everywhere else on this
+        // page, not something worth delaying the whole reveal for.
+        arjun_theme._widget_done = true;
+        arjun_theme._maybe_reveal_workspace();
+
+        if (!arjun_theme._social_state.loaded) {
+            frappe.call({
+                method: 'olscpl_hrms.api.social_feed.get_feed',
+                args: { limit: 3 },
+                callback: function (r) {
+                    if (!r.message) return;
+                    arjun_theme._social_state.posts = r.message.posts || [];
+                    arjun_theme._social_state.me = r.message.me || {};
+                    arjun_theme._social_state.canApprove = !!r.message.canApprove;
+                    arjun_theme._social_state.loaded = true;
+                    arjun_theme._render_social_composer(); // avatar now reflects "me"
+                    arjun_theme._render_social_posts();
+                },
+            });
+        }
+    };
+
+    // The composer region is no longer where posts actually get written -
+    // it's just a Twitter-style trigger (avatar + placeholder + tool
+    // icons) that opens the full compose dialog (_open_social_compose_
+    // dialog below) where the real writing, formatting, subtopic and
+    // announcement flag happen. Kept as its own render function/region
+    // (rather than folded into the widget shell markup) since it still
+    // needs to re-render once "me" (the avatar) loads in.
+    arjun_theme._render_social_composer = function () {
+        const region = document.getElementById('arjun-social-composer-region');
+        if (!region) return;
+        const s = arjun_theme._social_state;
+
+        region.innerHTML =
+            '<div class="arjun-social-composer-row">' +
+            arjun_theme._social_avatar_html(s.me, 38) +
+            '<div class="arjun-social-composer-main">' +
+            '<div class="arjun-social-composer-trigger" id="arjun-social-composer-trigger">What’s up on your mind...</div>' +
+            '<div class="arjun-social-composer-footer">' +
+            '<div class="arjun-social-tools">' +
+            '<button type="button" class="arjun-social-tool-btn" id="arjun-social-emoji-btn" title="Emoji">' + arjun_theme.SOCIAL_ICONS.emoji + '</button>' +
+            '<button type="button" class="arjun-social-tool-btn" id="arjun-social-image-btn" title="Attach files">' + arjun_theme.SOCIAL_ICONS.image + '</button>' +
+            '</div>' +
+            '<button type="button" class="arjun-social-post-btn" id="arjun-social-post-btn">Post</button>' +
+            '</div>' +
+            '</div></div>';
+    };
+
+    arjun_theme._social_render_post_images = function (images) {
+        if (!images || !images.length) return '';
+        const n = Math.min(images.length, 4);
+        return (
+            '<div class="arjun-social-post-images arjun-social-post-images-' + n + '">' +
+            images.map(function (url) { return '<img src="' + frappe.utils.escape_html(url) + '" alt="">'; }).join('') +
+            '</div>'
+        );
+    };
+
+    arjun_theme._social_render_post_attachments = function (attachments) {
+        if (!attachments || !attachments.length) return '';
+        return (
+            '<div class="arjun-social-attachment-list">' + attachments.map(function (a) {
+                return (
+                    '<a class="arjun-social-attachment-chip arjun-social-attachment-chip-link" href="' + frappe.utils.escape_html(a.url) + '" target="_blank" rel="noopener" download="' + frappe.utils.escape_html(a.filename) + '">' +
+                    '<span class="arjun-social-attachment-icon">' + arjun_theme._social_file_icon(a.filename) + '</span>' +
+                    '<div class="arjun-social-attachment-info"><div class="arjun-social-attachment-name">' + frappe.utils.escape_html(a.filename) + '</div>' +
+                    (a.size != null ? '<div class="arjun-social-attachment-size">' + arjun_theme._social_format_size(a.size) + '</div>' : '') + '</div>' +
+                    '<span class="arjun-social-attachment-open">Open</span>' +
+                    '</a>'
+                );
+            }).join('') + '</div>'
+        );
+    };
+
+    arjun_theme._social_render_comments = function (post) {
+        const s = arjun_theme._social_state;
+        const list = s.comments[post.name];
+        const draft = s.commentDraft[post.name] || '';
+        const listHtml = list == null
+            ? '<div class="arjun-social-empty" style="padding:10px 0">Loading comments...</div>'
+            : (list.length
+                ? list.map(function (c) {
+                    const canDelete = s.me && (c.authorUser === s.me.user || s.canApprove);
+                    const deleteBtn = canDelete
+                        ? '<button type="button" class="arjun-social-comment-delete" data-delete-comment="' + post.name + '|' + c.name + '" title="Delete comment">&times;</button>'
+                        : '';
+                    return (
+                        '<div class="arjun-social-comment">' + arjun_theme._social_avatar_html(c.author, 26) +
+                        '<div class="arjun-social-comment-bubble"><div class="arjun-social-comment-author">' + frappe.utils.escape_html(c.author.name) + '</div>' +
+                        '<div class="arjun-social-comment-text">' + frappe.utils.escape_html(c.comment) + '</div></div>' + deleteBtn + '</div>'
+                    );
+                }).join('')
+                : '<div class="arjun-social-empty" style="padding:8px 0">No comments yet</div>');
+
+        return (
+            '<div class="arjun-social-comments">' + listHtml +
+            '<div class="arjun-social-comment-form">' +
+            '<input type="text" class="arjun-social-comment-input" data-comment-input="' + post.name + '" placeholder="Write a comment..." value="' + frappe.utils.escape_html(draft) + '">' +
+            '<button type="button" class="arjun-social-comment-send" data-send-comment="' + post.name + '">Send</button>' +
+            '</div></div>'
+        );
+    };
+
+    arjun_theme._render_social_posts = function () {
+        const region = document.getElementById('arjun-social-posts-region');
+        if (!region) return;
+        const s = arjun_theme._social_state;
+
+        const postsHtml = !s.loaded
+            ? '<div class="arjun-social-empty">Loading posts...</div>'
+            : (s.posts.length
+                ? s.posts.map(function (p) {
+                    const expanded = !!s.expanded[p.name];
+                    // Buttons/inputs below (like, comment, the comment form)
+                    // can't legally nest inside an <a> - this is a plain div
+                    // that navigates to the full feed on click (see the
+                    // delegated handler in _bind_social_widget_events),
+                    // except when the click landed on one of them, which
+                    // stops it from propagating up to that handler.
+                    return (
+                        '<div class="arjun-social-post' + (p.isAnnouncement ? ' is-announcement' : '') + '" data-post-link="' + p.name + '">' +
+                        arjun_theme._social_avatar_html(p.author, 36) +
+                        '<div class="arjun-social-post-body">' +
+                        (p.isAnnouncement ? '<div class="arjun-social-announcement-badge">📢 ' + __('Announcement') + '</div>' : '') +
+                        (p.subtopic ? '<div class="arjun-social-subtopic-tag">' + frappe.utils.escape_html(p.subtopic) + '</div>' : '') +
+                        '<div class="arjun-social-post-head"><b>' + frappe.utils.escape_html(p.author.name) + '</b>' +
+                        '<span>' + arjun_theme._social_relative_time(p.postedOn) + '</span></div>' +
+                        // p.content is rich HTML (Text Editor field, sanitized
+                        // server-side on save) - rendered as-is, not escaped,
+                        // so formatting (bold/lists/alignment/etc) survives.
+                        (p.content ? '<div class="arjun-social-post-text">' + p.content + '</div>' : '') +
+                        arjun_theme._social_render_post_images(p.images) +
+                        arjun_theme._social_render_post_attachments(p.attachments) +
+                        '<div class="arjun-social-post-actions">' +
+                        '<button type="button" class="arjun-social-meta-stat arjun-social-like-btn ' + (p.likedByMe ? 'liked' : '') + '" data-like="' + p.name + '">' + arjun_theme.SOCIAL_ICONS.heart + '<span>' + (p.likeCount || 0) + '</span></button>' +
+                        '<button type="button" class="arjun-social-meta-stat arjun-social-comment-btn" data-toggle-comments="' + p.name + '">' + arjun_theme.SOCIAL_ICONS.comment + '<span>' + (p.commentCount || 0) + '</span></button>' +
+                        '</div>' +
+                        (expanded ? arjun_theme._social_render_comments(p) : '') +
+                        '</div>' +
+                        '</div>'
+                    );
+                }).join('')
+                : '<div class="arjun-social-empty">No posts yet. Be the first to share something!</div>');
+
+        region.innerHTML =
+            (s.loaded && s.posts.length ? '<div class="arjun-social-posts-label">Recent Posts</div>' : '') +
+            '<div class="arjun-social-posts">' + postsHtml + '</div>' +
+            '<a href="/social-feed" class="arjun-social-view-all"><span>View Social Feed</span>' + arjun_theme.SOCIAL_ICONS.arrow + '</a>';
+    };
+
+    arjun_theme._social_patch_comments = function (name) {
+        const post = arjun_theme._social_find_post(name);
+        // .arjun-social-post is a flex *row* (avatar + body side by side) -
+        // the comment thread belongs inside .arjun-social-post-body, which
+        // stacks its own children normally. Appending to the row itself
+        // (as this used to) made the thread a third flex item next to the
+        // avatar instead of content stacked under the post text.
+        const bodyEl = document.querySelector('#arjun-social-posts-region .arjun-social-post[data-post-link="' + name + '"] .arjun-social-post-body');
+        if (!post || !bodyEl) return;
+        const html = arjun_theme._social_render_comments(post);
+        const existing = bodyEl.querySelector('.arjun-social-comments');
+        if (existing) existing.outerHTML = html;
+        else bodyEl.insertAdjacentHTML('beforeend', html);
+    };
+
+    arjun_theme._social_patch_comment_count = function (name) {
+        const post = arjun_theme._social_find_post(name);
+        const btn = document.querySelector('#arjun-social-posts-region [data-toggle-comments="' + name + '"]');
+        if (btn && post) btn.innerHTML = arjun_theme.SOCIAL_ICONS.comment + '<span>' + (post.commentCount || 0) + '</span>';
+    };
+
+    arjun_theme._social_send_comment = function (postName) {
+        const s = arjun_theme._social_state;
+        const text = (s.commentDraft[postName] || '').trim();
+        if (!text) return;
+        frappe.call({
+            method: 'olscpl_hrms.api.social_feed.add_comment',
+            args: { post: postName, comment: text },
+            callback: function (r) {
+                if (!r.message) return;
+                if (!s.comments[postName]) s.comments[postName] = [];
+                s.comments[postName].push(r.message);
+                s.commentDraft[postName] = '';
+                const post = arjun_theme._social_find_post(postName);
+                if (post) post.commentCount = r.message.commentCount;
+                arjun_theme._social_patch_comments(postName);
+                arjun_theme._social_patch_comment_count(postName);
+            },
+        });
+    };
+
+    // ---- Compose dialog (subtopic + announcement flag + rich text +
+    // image/attachment uploads + emoji) ----
+    // The inline composer above is just a trigger now - writing the actual
+    // post happens in this frappe.ui.Dialog, which is the only place that
+    // gets Frappe's full "Text Editor" toolbar (bold/italic/lists/align/
+    // etc, see get_toolbar_options() in frappe's text_editor.js) for free.
+    // Its upload/emoji state is a throwaway object scoped to one dialog
+    // instance, not arjun_theme._social_state - the dialog builds and tears
+    // down its own DOM each time it opens, so nothing here needs to survive
+    // past that, unlike the widget's own persistent post list/composer.
+    arjun_theme._open_social_compose_dialog = function () {
+        const cs = { images: [], attachments: [], uploading: 0, emojiOpen: false };
+
+        const dialog = new frappe.ui.Dialog({
+            title: __('Create Post'),
+            fields: [
+                {
+                    fieldname: 'subtopic',
+                    fieldtype: 'Data',
+                    label: __('Topic'),
+                    description: __('Optional - shown as a tag above the post (e.g. "Policy Update", "Team Outing").'),
+                },
+                {
+                    fieldname: 'is_announcement',
+                    fieldtype: 'Check',
+                    label: __('📢 Mark as Announcement'),
+                },
+                { fieldtype: 'Section Break' },
+                {
+                    fieldname: 'content',
+                    fieldtype: 'Text Editor',
+                    label: __('Post'),
+                },
+                {
+                    fieldname: 'upload_area',
+                    fieldtype: 'HTML',
+                    options: '<div id="arjun-compose-upload-region"></div>',
+                },
+            ],
+            primary_action_label: __('Post'),
+            primary_action: function () {
+                arjun_theme._submit_social_compose_dialog(dialog, cs);
+            },
+        });
+
+        dialog.$wrapper.addClass('arjun-social-compose-dialog');
+        dialog.show();
+
+        // Quill's own placeholder mechanism reads this attribute directly
+        // (see .ql-editor.ql-blank::before in quill.snow.css) - the Text
+        // Editor control itself has no `placeholder` df property.
+        const contentField = dialog.fields_dict.content;
+        if (contentField && contentField.quill) {
+            contentField.quill.root.setAttribute('data-placeholder', "What’s up on your mind...");
+        }
+
+        arjun_theme._render_compose_upload_region(dialog, cs);
+        arjun_theme._bind_compose_dialog_events(dialog, cs);
+    };
+
+    arjun_theme._render_compose_upload_region = function (dialog, cs) {
+        const region = dialog.$wrapper.find('#arjun-compose-upload-region')[0];
+        if (!region) return;
+
+        const previewHtml = cs.images.length
+            ? '<div class="arjun-social-preview-grid">' + cs.images.map(function (url, i) {
+                return (
+                    '<div class="arjun-social-preview"><img src="' + frappe.utils.escape_html(url) + '">' +
+                    '<button type="button" class="arjun-social-preview-remove" data-remove-image="' + i + '">&times;</button></div>'
+                );
+            }).join('') + '</div>'
+            : '';
+        const attachmentsHtml = cs.attachments.length
+            ? '<div class="arjun-social-attachment-list">' + cs.attachments.map(function (a, i) {
+                return (
+                    '<div class="arjun-social-attachment-chip"><span class="arjun-social-attachment-icon">' + arjun_theme._social_file_icon(a.filename) + '</span>' +
+                    '<div class="arjun-social-attachment-info"><div class="arjun-social-attachment-name">' + frappe.utils.escape_html(a.filename) + '</div>' +
+                    (a.size != null ? '<div class="arjun-social-attachment-size">' + arjun_theme._social_format_size(a.size) + '</div>' : '') + '</div>' +
+                    '<button type="button" class="arjun-social-preview-remove" data-remove-attachment="' + i + '">&times;</button></div>'
+                );
+            }).join('') + '</div>'
+            : '';
+        const canAddMore = cs.images.length < arjun_theme.SOCIAL_MAX_IMAGES || cs.attachments.length < arjun_theme.SOCIAL_MAX_ATTACHMENTS;
+
+        const emojiPop = cs.emojiOpen
+            ? '<div class="arjun-social-emoji-pop" id="arjun-compose-emoji-pop">' +
+              arjun_theme.SOCIAL_EMOJIS.map(function (e) { return '<button type="button" data-emoji="' + e + '">' + e + '</button>'; }).join('') +
+              '</div>'
+            : '';
+
+        region.innerHTML =
+            previewHtml + attachmentsHtml +
+            '<div class="arjun-social-composer-footer arjun-compose-dialog-tools">' +
+            '<div class="arjun-social-tools">' +
+            '<button type="button" class="arjun-social-tool-btn" id="arjun-compose-emoji-btn" title="Emoji">' + arjun_theme.SOCIAL_ICONS.emoji + '</button>' +
+            '<button type="button" class="arjun-social-tool-btn" id="arjun-compose-image-btn" title="Attach files" ' + (canAddMore ? '' : 'disabled') + '>' + arjun_theme.SOCIAL_ICONS.image + '</button>' +
+            '<input type="file" multiple id="arjun-compose-image-input" style="display:none">' +
+            '</div>' +
+            (cs.uploading ? '<div class="arjun-social-hint">Uploading file' + (cs.uploading > 1 ? 's' : '') + '...</div>' : '') +
+            '</div>' + emojiPop;
+    };
+
+    arjun_theme._bind_compose_dialog_events = function (dialog, cs) {
+        const $wrap = dialog.$wrapper;
+
+        $wrap.on('click', '#arjun-compose-emoji-btn', function (e) {
+            e.stopPropagation();
+            cs.emojiOpen = !cs.emojiOpen;
+            arjun_theme._render_compose_upload_region(dialog, cs);
+        });
+        $wrap.on('click', '#arjun-compose-upload-region', function (e) { e.stopPropagation(); });
+        $wrap.on('mousedown', '[data-emoji]', function (e) { e.preventDefault(); }); // keep Quill's selection alive, same reasoning as the old inline composer
+        $wrap.on('click', '[data-emoji]', function () {
+            const emoji = $(this).attr('data-emoji');
+            const contentField = dialog.fields_dict.content;
+            if (contentField && contentField.quill) {
+                const quill = contentField.quill;
+                const range = quill.getSelection(true) || { index: Math.max(0, quill.getLength() - 1) };
+                quill.insertText(range.index, emoji, 'user');
+                quill.setSelection(range.index + emoji.length, 0);
+            }
+            cs.emojiOpen = false;
+            arjun_theme._render_compose_upload_region(dialog, cs);
+        });
+
+        $wrap.on('click', '#arjun-compose-image-btn', function () {
+            $wrap.find('#arjun-compose-image-input').trigger('click');
+        });
+        $wrap.on('change', '#arjun-compose-image-input', function (e) {
+            let files = Array.prototype.slice.call(e.target.files || []);
+            e.target.value = '';
+            if (!files.length) return;
+
+            let imageFiles = files.filter(arjun_theme._social_is_image_file);
+            let otherFiles = files.filter(function (f) { return !arjun_theme._social_is_image_file(f); });
+
+            const imageRoom = arjun_theme.SOCIAL_MAX_IMAGES - cs.images.length;
+            const attachmentRoom = arjun_theme.SOCIAL_MAX_ATTACHMENTS - cs.attachments.length;
+            const dropped = [];
+            if (imageFiles.length > imageRoom) { dropped.push('up to ' + arjun_theme.SOCIAL_MAX_IMAGES + ' images'); imageFiles = imageFiles.slice(0, imageRoom); }
+            if (otherFiles.length > attachmentRoom) { dropped.push('up to ' + arjun_theme.SOCIAL_MAX_ATTACHMENTS + ' other files'); otherFiles = otherFiles.slice(0, attachmentRoom); }
+            if (dropped.length) frappe.show_alert({ message: __('You can attach {0} per post - extra files were skipped.', [dropped.join(' and ')]), indicator: 'orange' }, 6);
+
+            const totalCount = imageFiles.length + otherFiles.length;
+            if (!totalCount) return;
+            cs.uploading = totalCount;
+            arjun_theme._render_compose_upload_region(dialog, cs);
+
+            const doUpload = function (file) {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('is_private', '0');
+                return fetch('/api/method/upload_file', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'X-Frappe-CSRF-Token': frappe.csrf_token || '' },
+                    body: fd,
+                })
+                    .then(function (res) { return res.json(); })
+                    .then(function (body) { return (body.message && body.message.file_url) || null; })
+                    .catch(function () { return null; });
+            };
+
+            Promise.all([
+                Promise.all(imageFiles.map(doUpload)),
+                Promise.all(otherFiles.map(function (f) {
+                    return doUpload(f).then(function (url) { return url ? { url: url, filename: f.name, size: f.size } : null; });
+                })),
+            ]).then(function (results) {
+                const imageUrls = results[0].filter(Boolean);
+                const attachmentObjs = results[1].filter(Boolean);
+                const failed = totalCount - imageUrls.length - attachmentObjs.length;
+                cs.images = cs.images.concat(imageUrls);
+                cs.attachments = cs.attachments.concat(attachmentObjs);
+                cs.uploading = 0;
+                if (failed) frappe.show_alert({ message: __('{0} file(s) failed to upload.', [failed]), indicator: 'red' });
+                arjun_theme._render_compose_upload_region(dialog, cs);
+            });
+        });
+        $wrap.on('click', '[data-remove-image]', function () {
+            cs.images.splice(parseInt($(this).attr('data-remove-image'), 10), 1);
+            arjun_theme._render_compose_upload_region(dialog, cs);
+        });
+        $wrap.on('click', '[data-remove-attachment]', function () {
+            cs.attachments.splice(parseInt($(this).attr('data-remove-attachment'), 10), 1);
+            arjun_theme._render_compose_upload_region(dialog, cs);
+        });
+    };
+
+    arjun_theme._submit_social_compose_dialog = function (dialog, cs) {
+        const s = arjun_theme._social_state;
+        const values = dialog.get_values(true) || {};
+        const content = (values.content || '').trim();
+        const plainText = $('<div>').html(content).text().trim();
+        if (!plainText && !cs.images.length && !cs.attachments.length) {
+            frappe.show_alert({ message: __('Write something or attach a file before posting.'), indicator: 'orange' });
+            return;
+        }
+        if (cs.uploading) return;
+
+        dialog.get_primary_btn().prop('disabled', true).text(__('Posting...'));
+
+        frappe.call({
+            method: 'olscpl_hrms.api.social_feed.create_post',
+            args: {
+                content: content,
+                subtopic: values.subtopic || '',
+                is_announcement: values.is_announcement ? 1 : 0,
+                images: JSON.stringify(cs.images),
+                attachments: JSON.stringify(cs.attachments),
+            },
+            callback: function (r) {
+                dialog.hide();
+                if (!r.message) return;
+                s.posts.unshift(r.message);
+                s.posts = s.posts.slice(0, 3);
+                arjun_theme._render_social_posts();
+                if (r.message.status !== 'Approved') {
+                    frappe.show_alert({ message: __('Post submitted - awaiting HR/System Manager approval.'), indicator: 'orange' }, 6);
+                } else {
+                    frappe.show_alert({ message: __('Posted!'), indicator: 'green' });
+                }
+            },
+            error: function () {
+                dialog.get_primary_btn().prop('disabled', false).text(__('Post'));
+            },
+        });
+    };
+
+    // Bound exactly once (setup_social_feed_widget only ever builds the
+    // widget shell once) using jQuery's delegated-event form - $widget.on
+    // (event, selector, handler) - so it keeps working on elements that
+    // get swapped in later by _render_social_composer()/_render_social_
+    // posts() without ever needing to be re-bound.
+    arjun_theme._bind_social_widget_events = function () {
+        const $widget = $('#arjun-social-widget');
+        const s = arjun_theme._social_state;
+
+        // The like button sits inside a post row that otherwise navigates
+        // to the full feed on click - stop that click from bubbling up to
+        // the row's own handler below, then toggle the like server-side
+        // and patch just this one button (no need to touch anything else
+        // in the 3-post preview list).
+        $widget.on('click', '[data-like]', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const $btn = $(this);
+            const name = $btn.attr('data-like');
+            frappe.call({
+                method: 'olscpl_hrms.api.social_feed.toggle_like',
+                args: { post: name },
+                callback: function (r) {
+                    if (!r.message) return;
+                    const post = s.posts.find(function (p) { return p.name === name; });
+                    if (post) { post.likedByMe = r.message.liked; post.likeCount = r.message.likeCount; }
+                    $btn.toggleClass('liked', r.message.liked);
+                    $btn.find('span').text(r.message.likeCount || 0);
+                },
+            });
+        });
+        $widget.on('click', '[data-post-link]', function () {
+            window.location.href = '/social-feed';
+        });
+
+        $widget.on('click', '[data-toggle-comments]', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const name = $(this).attr('data-toggle-comments');
+            s.expanded[name] = !s.expanded[name];
+            const postEl = document.querySelector('#arjun-social-posts-region .arjun-social-post[data-post-link="' + name + '"]');
+            const existing = postEl && postEl.querySelector('.arjun-social-comments');
+            if (!s.expanded[name]) {
+                if (existing) existing.remove();
+                return;
+            }
+            if (!existing) arjun_theme._social_patch_comments(name); // shows the "Loading comments..." state immediately
+            if (s.comments[name] == null) {
+                frappe.call({
+                    method: 'olscpl_hrms.api.social_feed.get_comments',
+                    type: 'GET',
+                    args: { post: name },
+                    callback: function (r) {
+                        s.comments[name] = r.message || [];
+                        arjun_theme._social_patch_comments(name);
+                    },
+                });
+            }
+        });
+        // Stops both the post-link navigation *and* the page's own click-
+        // outside-to-close-emoji-popover listener from reacting to typing
+        // in this field.
+        $widget.on('click', '[data-comment-input], [data-send-comment], .arjun-social-comment-delete', function (e) { e.stopPropagation(); });
+        $widget.on('click', '.arjun-social-attachment-chip-link', function (e) { e.stopPropagation(); });
+        $widget.on('input', '[data-comment-input]', function (e) {
+            s.commentDraft[$(this).attr('data-comment-input')] = e.target.value;
+        });
+        $widget.on('keydown', '[data-comment-input]', function (e) {
+            if (e.key === 'Enter') arjun_theme._social_send_comment($(this).attr('data-comment-input'));
+        });
+        $widget.on('click', '[data-send-comment]', function () {
+            arjun_theme._social_send_comment($(this).attr('data-send-comment'));
+        });
+        $widget.on('click', '.arjun-social-comment-delete', function (e) {
+            const parts = $(this).attr('data-delete-comment').split('|');
+            const postName = parts[0], commentName = parts[1];
+            if (!window.confirm('Delete this comment?')) return;
+            frappe.call({
+                method: 'olscpl_hrms.api.social_feed.delete_comment',
+                args: { name: commentName },
+                callback: function () {
+                    s.comments[postName] = (s.comments[postName] || []).filter(function (c) { return c.name !== commentName; });
+                    const post = arjun_theme._social_find_post(postName);
+                    if (post) post.commentCount = Math.max(0, (post.commentCount || 1) - 1);
+                    arjun_theme._social_patch_comments(postName);
+                    arjun_theme._social_patch_comment_count(postName);
+                },
+            });
+        });
+
+        // The inline composer is a pure trigger now - the placeholder text
+        // and both tool icons all just open the real compose dialog.
+        $widget.on('click', '#arjun-social-composer-trigger, #arjun-social-emoji-btn, #arjun-social-image-btn, #arjun-social-post-btn', function (e) {
+            e.preventDefault();
+            arjun_theme._open_social_compose_dialog();
+        });
     };
 
     arjun_theme.collapse_chevron_html = function (extra_class) {
@@ -414,13 +1173,14 @@
             });
         }
 
-        // arjun_theme.css hides .links-widget-box cards under
-        // body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) so they
-        // never render in their un-grouped/expanded state before we get a
-        // chance to collapse them - the actual cause of the "shows
-        // expanded first, then collapses" flash. Reveal them now that
-        // grouping is done.
-        document.body.classList.add('arjun-groups-ready');
+        // arjun_theme.css hides .links-widget-box cards (and, for the
+        // Explore/Social Posts split, the whole redactor) under
+        // body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) so
+        // nothing renders in an intermediate state before we get a chance
+        // to finish. Grouping is one of three things that has to finish
+        // before that class gets added - see _maybe_reveal_workspace.
+        arjun_theme._groups_done = true;
+        arjun_theme._maybe_reveal_workspace();
     };
 
     // Workspaces with children (Accounting, HR, Payroll, ...) render a

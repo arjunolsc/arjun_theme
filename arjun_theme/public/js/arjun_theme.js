@@ -287,6 +287,16 @@
               '</a>'
             : '';
 
+        // Same HR/System Manager-only visibility as the Admin Dashboard
+        // button above - the www controller behind /onboarding-dashboard
+        // enforces the same check server-side.
+        const onboarding_btn_html = can_see_admin_dashboard
+            ? '<a href="/onboarding-dashboard" class="arjun-hrms-dashboard-btn">' +
+                '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c1.2-3.6 3.8-5.4 6.5-5.4s5.3 1.8 6.5 5.4" stroke-linecap="round"/><circle cx="17" cy="8.5" r="2.6"/><path d="M15.5 14.8c2.2.3 4 1.9 5 4.9" stroke-linecap="round"/></svg>' +
+                '<span>Onboarding Dashboard</span>' +
+              '</a>'
+            : '';
+
         const $banner = $(
             '<div id="arjun-hrms-greeting" class="arjun-hrms-greeting">' +
                 '<div class="arjun-hrms-greeting-text">' +
@@ -295,6 +305,7 @@
                 '</div>' +
                 '<div class="arjun-hrms-greeting-actions">' +
                     admin_btn_html +
+                    onboarding_btn_html +
                     '<a href="/ess-dashboard" class="arjun-hrms-dashboard-btn">' +
                         '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>' +
                         '<span>Dashboard</span>' +

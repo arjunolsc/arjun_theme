@@ -1162,6 +1162,17 @@ span.sidebar-item-label {
     background-color: transparent !important;
 }
 
+/* Workspace cards (Explore shortcuts, Social Posts, Reports & Masters
+   groups) are pure white (--surface-color), but the page behind them was
+   only a hair off-white (--bodybg-color, #f6f7fa) - too close in tone for
+   the cards to read as distinct surfaces at a glance. A visibly greyer
+   backdrop, scoped to the Workspace view only (so list/form/report pages
+   keep their existing background untouched), makes the card boundaries
+   obvious without needing extra borders/shadows. */
+[data-page-route="Workspaces"] .layout-main-section-wrapper {
+    background-color: #dde1e8;
+}
+
 .links-widget-box {
     padding: 10px;
     box-shadow: var(--box-shadow);

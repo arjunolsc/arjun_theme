@@ -205,6 +205,7 @@
         arjun_theme.setup_responsive_sidebar();
         arjun_theme.setup_sidebar_expand();
         arjun_theme.inject_hrms_home_greeting();
+        arjun_theme.setup_hrms_home_loader();
         arjun_theme.setup_explore_social_split();
         arjun_theme.setup_social_feed_widget();
         arjun_theme.setup_widget_card_collapse();
@@ -314,6 +315,36 @@
             '</div>'
         );
         $main_section.prepend($banner);
+    };
+
+    // The Explore/Social Posts/Reports & Masters area stays genuinely
+    // blank (visibility:hidden, see arjun_theme.css) for up to ~1s while
+    // editorjs trickles in the workspace's shortcut cards and their counts
+    // - real Frappe rendering time we can't shorten without editing
+    // frappe's own files. A big animated loader in that space, in the same
+    // colors as the greeting banner's gradient, at least reads as
+    // "loading" instead of looking frozen. Overlaid on .editor-js-container
+    // itself (a sibling of .codex-editor__redactor, not a descendant) so
+    // it's untouched by the rule that hides the redactor - the loader
+    // fills the same footprint the hidden content will end up in, then
+    // disappears the instant .arjun-groups-ready is added, purely via CSS.
+    arjun_theme.setup_hrms_home_loader = function () {
+        const $title = $('.title-area .title-text:visible').first();
+        if (!$title.length || $title.text().trim() !== 'Hrms Home') {
+            $('#arjun-hrms-home-loader').remove();
+            return;
+        }
+        if ($('#arjun-hrms-home-loader').length) return;
+
+        const $container = $('.editor-js-container').first();
+        if (!$container.length) return;
+
+        $container.css('position', 'relative').prepend(
+            '<div id="arjun-hrms-home-loader" class="arjun-hrms-home-loader">' +
+                '<div class="arjun-hrms-home-loader-ring"></div>' +
+                '<p>Loading your workspace…</p>' +
+            '</div>'
+        );
     };
 
     // ---- Social feed widget (Hrms Home, above Explore) ----
@@ -467,8 +498,14 @@
         // location instead of back in the redactor's own flat list -
         // "Reports & Masters" and everything after it silently vanished
         // from the visible page even though nothing had actually deleted it.
+        // 300ms rather than the originally-chosen 500ms: still comfortably
+        // longer than the gap between successive block-render mutations
+        // (well under 100ms locally), it just trims dead "waited past the
+        // point rendering actually finished" time off the reveal, which is
+        // most of what made the whole Explore/Social Posts/Reports area
+        // feel slow to appear after a reload.
         clearTimeout(arjun_theme._explore_split_timer);
-        arjun_theme._explore_split_timer = setTimeout(arjun_theme._do_explore_social_split, 500);
+        arjun_theme._explore_split_timer = setTimeout(arjun_theme._do_explore_social_split, 300);
     };
 
     arjun_theme._do_explore_social_split = function () {
@@ -774,6 +811,23 @@
                     fieldname: 'content',
                     fieldtype: 'Text Editor',
                     label: __('Post'),
+                    // Dialog upload region below already handles images/
+                    // attachments with its own size limits, so drop Quill's
+                    // built-in "image" button here - it'd just be a second,
+                    // uncapped way to embed images. Dialog fields build their
+                    // control straight from this field def (no frappe.meta
+                    // copy/cache in between, unlike a Desk doctype form), so
+                    // this hook - the one Frappe's Text Editor control checks
+                    // before falling back to its own default - takes effect
+                    // immediately.
+                    get_toolbar_options: function () {
+                        var groups = frappe.ui.form.ControlTextEditor.prototype.get_toolbar_options.call(this);
+                        return groups
+                            .map(function (group) {
+                                return group.filter(function (item) { return item !== 'image'; });
+                            })
+                            .filter(function (group) { return group.length; });
+                    },
                 },
                 {
                     fieldname: 'upload_area',
@@ -1130,10 +1184,13 @@
         // on every DOM mutation, so debounce: each call pushes the actual
         // grouping attempt further out, and it only fires once mutations
         // stop for a bit - i.e. once the DOM has actually settled.
+        // Same reasoning as the 300ms above for the Explore/Social split -
+        // shortened from 400ms so this settles sooner without cutting the
+        // margin so close that a normal render trickle could sneak past it.
         clearTimeout(arjun_theme._widget_card_collapse_timer);
         arjun_theme._widget_card_collapse_timer = setTimeout(function () {
             arjun_theme._group_widget_cards($sectionHeading);
-        }, 400);
+        }, 250);
     };
 
     arjun_theme._group_widget_cards = function ($sectionHeading) {

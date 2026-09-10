@@ -1138,7 +1138,12 @@
             });
         });
         $widget.on('click', '[data-post-link]', function () {
-            window.location.href = '/social-feed';
+            // ?post=<name> - social_feed.js's scrollToLinkedPost() reads
+            // this on load and scrolls straight to + briefly highlights
+            // this exact post, instead of just landing at the top of the
+            // full feed and leaving the user to hunt for the one they
+            // actually clicked.
+            window.location.href = '/social-feed?post=' + encodeURIComponent($(this).attr('data-post-link'));
         });
 
         $widget.on('click', '[data-toggle-comments]', function (e) {

@@ -1586,6 +1586,59 @@
         };
     });
 
+    // ---- Global page-transition loader (every page, not just Hrms Home) ----
+    // The Hrms Home loader above only covers that one workspace's own slow
+    // client-side render (splitting/grouping/widget-building). Every other
+    // route change - sidebar link, breadcrumb, browser back/forward,
+    // frappe.set_route() from anywhere in the app - has no loading feedback
+    // at all: the old page's content is hidden and the new one just pops in
+    // whenever Frappe finishes rendering it, which can take a visible beat.
+    // Reuses the exact same "walking boxes" markup/CSS as the Hrms Home
+    // loader (.arjun-hrms-home-loader-box etc. - see arjun_theme.css) under
+    // a new full-viewport wrapper, instead of duplicating the animation.
+    arjun_theme._page_loader_hide_timer = null;
+
+    arjun_theme.show_page_loader = function () {
+        if (!$('#arjun-page-loader').length) {
+            $('body').append(
+                '<div id="arjun-page-loader" class="arjun-page-loader">' +
+                    '<div class="arjun-hrms-home-loader-boxes">' +
+                        '<div class="arjun-hrms-home-loader-box"></div>' +
+                        '<div class="arjun-hrms-home-loader-box"></div>' +
+                        '<div class="arjun-hrms-home-loader-box"></div>' +
+                        '<div class="arjun-hrms-home-loader-box"></div>' +
+                        '<div class="arjun-hrms-home-loader-box"></div>' +
+                    '</div>' +
+                    '<p>Loading…</p>' +
+                '</div>'
+            );
+        }
+        document.body.classList.add('arjun-page-loading');
+        // Failsafe - if 'page-change' never actually fires for some reason
+        // (a route that bails out early, a non-navigation "route" call,
+        // etc.) don't leave the whole app stuck behind the loader forever.
+        clearTimeout(arjun_theme._page_loader_hide_timer);
+        arjun_theme._page_loader_hide_timer = setTimeout(arjun_theme.hide_page_loader, 4000);
+    };
+
+    arjun_theme.hide_page_loader = function () {
+        clearTimeout(arjun_theme._page_loader_hide_timer);
+        document.body.classList.remove('arjun-page-loading');
+    };
+
+    // frappe.router.route() is the single choke point behind every real
+    // navigation: popstate (browser back/forward) calls it directly, and
+    // frappe.set_route() -> push_state() calls it too - so patching it
+    // here catches sidebar clicks, breadcrumbs, and programmatic routing
+    // from anywhere in the app without needing separate listeners on each.
+    (function () {
+        const _orig_route = frappe.router.route;
+        frappe.router.route = function () {
+            arjun_theme.show_page_loader();
+            return _orig_route.apply(this, arguments);
+        };
+    })();
+
     const observer = new MutationObserver(() => {
         arjun_theme.run_patches();
     });
@@ -1597,6 +1650,7 @@
     });
 
     $(document).on('app_ready page-change', function () {
+        arjun_theme.hide_page_loader();
         arjun_theme.run_patches();
         arjun_theme.mutate_charts();
     });

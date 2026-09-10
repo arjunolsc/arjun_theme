@@ -2222,6 +2222,37 @@ body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) .editor-js-container .co
     visibility: hidden;
 }
 
+/* Global page-transition loader - shown on every route change anywhere in
+   the app (sidebar clicks, breadcrumbs, browser back/forward), not just
+   Hrms Home's own slow-render window below. Toggled by arjun_theme.js's
+   show_page_loader()/hide_page_loader() via the .arjun-page-loading class
+   on <body>. Covers the full viewport (not measured off one page's own
+   content area, since it has to work identically on every page type)
+   and reuses the exact same "walking boxes" box/keyframes CSS as the
+   Hrms Home loader just below (.arjun-hrms-home-loader-box etc.) - only
+   the outer wrapper differs. */
+.arjun-page-loader {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    background: var(--np-bg, #f9fafb);
+}
+body.arjun-page-loading .arjun-page-loader {
+    display: flex;
+}
+.arjun-page-loader p {
+    margin: 0;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink-600, #64748b);
+    letter-spacing: 0.01em;
+}
+
 /* Big animated loader shown over that same hidden area (setup_hrms_home_
    loader() in arjun_theme.js) - same gradient as the greeting banner
    above it, so the wait reads as "loading", not blank/frozen. Positioned

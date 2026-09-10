@@ -204,6 +204,7 @@
         arjun_theme.setup_icon_picker();
         arjun_theme.setup_responsive_sidebar();
         arjun_theme.setup_sidebar_expand();
+        arjun_theme._resync_hrms_home_ready_flags();
         arjun_theme.inject_hrms_home_greeting();
         arjun_theme.setup_hrms_home_loader();
         arjun_theme.setup_explore_social_split();
@@ -219,6 +220,48 @@
         const el = document.getElementById('navbar-search');
         if (el && el.placeholder !== 'Search ...') {
             el.placeholder = 'Search ...';
+        }
+    };
+
+    // Safety net for the "switch away and back to Hrms Home shows raw
+    // ungrouped/unsplit cards for a beat, then snaps into place" bug: the
+    // whole hide-until-ready mechanism relies on _split_done/_groups_done/
+    // _widget_done only being true once their DOM output actually exists.
+    // That's reset when we detect leaving Hrms Home (see the early-return
+    // branch in inject_hrms_home_greeting below) - but if a revisit somehow
+    // re-renders the workspace's raw editorjs blocks from scratch without
+    // that leave ever being detected as a *route* change (Frappe treats it
+    // as a same-page refresh, not a navigation elsewhere), the old flags
+    // stay stuck true from the last successful visit, .arjun-groups-ready
+    // never gets removed, the hide-until-ready CSS rule (which depends on
+    // that class being absent) never engages, and the fresh raw content
+    // renders exposed until our own split/group functions catch up and
+    // silently correct it a moment later - exactly the flash reported.
+    //
+    // Belt-and-suspenders fix: re-derive each flag from what's actually in
+    // the DOM right now, every patch cycle, rather than trusting whatever
+    // was last recorded. A flag saying "done" while its own marker is
+    // missing means a fresh unprocessed render happened; un-mark it (and
+    // hide again) instead of leaving stale content exposed.
+    arjun_theme._resync_hrms_home_ready_flags = function () {
+        const $title = $('.title-area .title-text:visible').first();
+        if (!$title.length || $title.text().trim() !== 'Hrms Home') return;
+
+        let stale = false;
+        if (arjun_theme._split_done && !$('.arjun-explore-social-split').length) {
+            arjun_theme._split_done = false;
+            stale = true;
+        }
+        if (arjun_theme._groups_done && !$('.arjun-group-heading').length) {
+            arjun_theme._groups_done = false;
+            stale = true;
+        }
+        if (arjun_theme._widget_done && !$('#arjun-social-widget').length) {
+            arjun_theme._widget_done = false;
+            stale = true;
+        }
+        if (stale) {
+            document.body.classList.remove('arjun-groups-ready');
         }
     };
 
@@ -323,11 +366,17 @@
     // - real Frappe rendering time we can't shorten without editing
     // frappe's own files. A big animated loader in that space, in the same
     // colors as the greeting banner's gradient, at least reads as
-    // "loading" instead of looking frozen. Overlaid on .editor-js-container
-    // itself (a sibling of .codex-editor__redactor, not a descendant) so
-    // it's untouched by the rule that hides the redactor - the loader
-    // fills the same footprint the hidden content will end up in, then
-    // disappears the instant .arjun-groups-ready is added, purely via CSS.
+    // "loading" instead of looking frozen.
+    //
+    // Positioned as position:fixed, appended to <body> and measured off
+    // .layout-main-section-wrapper (the actual viewport-sized scroll
+    // container - stable regardless of how tall its content is), NOT
+    // absolute inside .editor-js-container like the first version of this
+    // was. That container keeps growing (still invisible) as more cards
+    // stream in behind the scenes, and editorjs occasionally nudges page
+    // scroll during that trickle - an absolutely-positioned loader inside
+    // it rode along with both, visibly drifting up and down instead of
+    // sitting still. Fixed positioning is immune to both.
     arjun_theme.setup_hrms_home_loader = function () {
         const $title = $('.title-area .title-text:visible').first();
         if (!$title.length || $title.text().trim() !== 'Hrms Home') {
@@ -336,15 +385,47 @@
         }
         if ($('#arjun-hrms-home-loader').length) return;
 
-        const $container = $('.editor-js-container').first();
-        if (!$container.length) return;
+        const $wrapper = $('.layout-main-section-wrapper').first();
+        if (!$wrapper.length) return;
 
-        $container.css('position', 'relative').prepend(
+        $('body').append(
             '<div id="arjun-hrms-home-loader" class="arjun-hrms-home-loader">' +
-                '<div class="arjun-hrms-home-loader-ring"></div>' +
+                '<div class="arjun-hrms-home-loader-boxes">' +
+                    '<div class="arjun-hrms-home-loader-box"></div>' +
+                    '<div class="arjun-hrms-home-loader-box"></div>' +
+                    '<div class="arjun-hrms-home-loader-box"></div>' +
+                    '<div class="arjun-hrms-home-loader-box"></div>' +
+                    '<div class="arjun-hrms-home-loader-box"></div>' +
+                '</div>' +
                 '<p>Loading your workspace…</p>' +
             '</div>'
         );
+        arjun_theme._position_hrms_home_loader();
+    };
+
+    // Measured once, right after inserting the loader - .layout-main-
+    // section-wrapper's own box doesn't move or resize as its (still
+    // invisible) content grows, so one measurement is enough for the
+    // ~1s this is ever on screen; no resize/scroll listener needed.
+    //
+    // The greeting banner sits inside that same wrapper and stays visible
+    // throughout (it's never part of the hide-until-ready gate) - starting
+    // the loader's box at the wrapper's own top would paint it over the
+    // banner instead of below it, so the top edge is the banner's bottom
+    // instead, with the wrapper's bottom edge as the floor.
+    arjun_theme._position_hrms_home_loader = function () {
+        const $loader = $('#arjun-hrms-home-loader');
+        const $wrapper = $('.layout-main-section-wrapper').first();
+        if (!$loader.length || !$wrapper.length) return;
+        const wrapperRect = $wrapper[0].getBoundingClientRect();
+        const $greeting = $('#arjun-hrms-greeting');
+        const top = $greeting.length ? $greeting[0].getBoundingClientRect().bottom : wrapperRect.top;
+        $loader.css({
+            left: wrapperRect.left + 'px',
+            top: top + 'px',
+            width: wrapperRect.width + 'px',
+            height: Math.max(wrapperRect.bottom - top, 0) + 'px',
+        });
     };
 
     // ---- Social feed widget (Hrms Home, above Explore) ----

@@ -2231,17 +2231,13 @@ body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) .editor-js-container .co
    .arjun-groups-ready lands, same trigger as everything above. */
 .arjun-hrms-home-loader {
     display: none;
-    /* top/left/right + a fixed height, not inset:0 - .editor-js-container
-       already grows to its final (still-invisible) height as the real
-       content streams in underneath, and inset:0 would center this inside
-       *that* full height, landing it well below the fold instead of right
-       under the greeting banner where a loading state needs to be seen. */
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 320px;
-    z-index: 2;
+    /* fixed, not absolute inside the growing/scrolling content area -
+       left/top/width/height are set inline by
+       arjun_theme._position_hrms_home_loader() from
+       .layout-main-section-wrapper's own (stable) box, so this sits still
+       instead of drifting as hidden content grows in behind it. */
+    position: fixed;
+    z-index: 1000;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -2251,30 +2247,57 @@ body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) .editor-js-container .co
 body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) .arjun-hrms-home-loader {
     display: flex;
 }
-.arjun-hrms-home-loader-ring {
-    --ring-size: 84px;
-    --ring-thickness: 8px;
-    width: var(--ring-size);
-    height: var(--ring-size);
-    border-radius: 50%;
+/* "Walking boxes" loader - each box flips end-over-end along the line
+   while its color cycles, hand-expanded from the SCSS @for-loop version
+   (nth-child/@for aren't valid plain CSS) into one explicit rule/keyframe
+   per box. Palette is the greeting banner's own navy-to-violet gradient
+   instead of the original's light blue, so it reads as this app's loader
+   rather than a generic one. */
+.arjun-hrms-home-loader-boxes {
+    --duration: 1.5s;
+    --container-size: 220px;
+    --box-size: 30px;
+    --box-border-radius: 15%;
+    width: var(--container-size);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     position: relative;
-    background: conic-gradient(from 0deg, #16264f 0%, #2d2f6e 45%, #4a3d8f 75%, #16264f 100%);
-    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring-thickness)), #000 calc(100% - var(--ring-thickness)));
-    mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring-thickness)), #000 calc(100% - var(--ring-thickness)));
-    animation: arjun-hrms-home-loader-spin 1s linear infinite;
-    filter: drop-shadow(0 6px 18px rgba(74, 61, 143, 0.35));
 }
-/* A second, larger halo pulsing behind the ring - the "big, modern"
-   look asked for, rather than just a plain spinner. */
-.arjun-hrms-home-loader-ring::after {
+.arjun-hrms-home-loader-box {
+    width: var(--box-size);
+    height: var(--box-size);
+    position: relative;
+    display: block;
+    transform-origin: -50% center;
+    border-radius: var(--box-border-radius);
+}
+.arjun-hrms-home-loader-box::after {
     content: "";
+    width: 100%;
+    height: 100%;
     position: absolute;
-    inset: calc(var(--ring-thickness) * -2.2);
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(74, 61, 143, 0.18), transparent 70%);
-    animation: arjun-hrms-home-loader-pulse 1.6s ease-in-out infinite;
-    z-index: -1;
+    top: 0;
+    right: 0;
+    border-radius: var(--box-border-radius);
+    box-shadow: 0 0 10px 0 rgba(74, 61, 143, 0.4);
 }
+.arjun-hrms-home-loader-box:nth-child(1) {
+    animation: arjun-hrms-home-loader-slide var(--duration) ease-in-out infinite alternate;
+}
+.arjun-hrms-home-loader-box:nth-child(1)::after {
+    background-color: #16264f;
+    animation: arjun-hrms-home-loader-color-change var(--duration) ease-in-out infinite alternate;
+}
+.arjun-hrms-home-loader-box:nth-child(2) { animation: arjun-hrms-home-loader-flip-1 var(--duration) ease-in-out infinite alternate; }
+.arjun-hrms-home-loader-box:nth-child(2)::after { background-color: #22335f; animation: arjun-hrms-home-loader-squidge-1 var(--duration) ease-in-out infinite alternate; }
+.arjun-hrms-home-loader-box:nth-child(3) { animation: arjun-hrms-home-loader-flip-2 var(--duration) ease-in-out infinite alternate; }
+.arjun-hrms-home-loader-box:nth-child(3)::after { background-color: #2d2f6e; animation: arjun-hrms-home-loader-squidge-2 var(--duration) ease-in-out infinite alternate; }
+.arjun-hrms-home-loader-box:nth-child(4) { animation: arjun-hrms-home-loader-flip-3 var(--duration) ease-in-out infinite alternate; }
+.arjun-hrms-home-loader-box:nth-child(4)::after { background-color: #3a3888; animation: arjun-hrms-home-loader-squidge-3 var(--duration) ease-in-out infinite alternate; }
+.arjun-hrms-home-loader-box:nth-child(5) { animation: arjun-hrms-home-loader-flip-4 var(--duration) ease-in-out infinite alternate; }
+.arjun-hrms-home-loader-box:nth-child(5)::after { background-color: #4a3d8f; animation: arjun-hrms-home-loader-squidge-4 var(--duration) ease-in-out infinite alternate; }
+
 .arjun-hrms-home-loader p {
     margin: 0;
     font-size: 14.5px;
@@ -2282,12 +2305,48 @@ body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) .arjun-hrms-home-loader 
     color: var(--ink-600, #64748b);
     letter-spacing: 0.01em;
 }
-@keyframes arjun-hrms-home-loader-spin {
-    to { transform: rotate(360deg); }
+
+@keyframes arjun-hrms-home-loader-slide {
+    0% { background-color: #16264f; transform: translatex(0vw); }
+    100% { background-color: #4a3d8f; transform: translatex(calc(var(--container-size) - (var(--box-size) * 1.25))); }
 }
-@keyframes arjun-hrms-home-loader-pulse {
-    0%, 100% { transform: scale(0.85); opacity: 0.6; }
-    50% { transform: scale(1.15); opacity: 1; }
+@keyframes arjun-hrms-home-loader-color-change {
+    0% { background-color: #16264f; }
+    100% { background-color: #4a3d8f; }
+}
+
+@keyframes arjun-hrms-home-loader-flip-1 { 0%, 15% { transform: rotate(0); } 35%, 100% { transform: rotate(-180deg); } }
+@keyframes arjun-hrms-home-loader-flip-2 { 0%, 30% { transform: rotate(0); } 50%, 100% { transform: rotate(-180deg); } }
+@keyframes arjun-hrms-home-loader-flip-3 { 0%, 45% { transform: rotate(0); } 65%, 100% { transform: rotate(-180deg); } }
+@keyframes arjun-hrms-home-loader-flip-4 { 0%, 60% { transform: rotate(0); } 80%, 100% { transform: rotate(-180deg); } }
+
+@keyframes arjun-hrms-home-loader-squidge-1 {
+    5% { transform-origin: center bottom; transform: scalex(1) scaley(1); }
+    15% { transform-origin: center bottom; transform: scalex(1.3) scaley(0.7); }
+    20%, 25% { transform-origin: center bottom; transform: scalex(0.8) scaley(1.4); }
+    55%, 100% { transform-origin: center top; transform: scalex(1) scaley(1); }
+    40% { transform-origin: center top; transform: scalex(1.3) scaley(0.7); }
+}
+@keyframes arjun-hrms-home-loader-squidge-2 {
+    20% { transform-origin: center bottom; transform: scalex(1) scaley(1); }
+    30% { transform-origin: center bottom; transform: scalex(1.3) scaley(0.7); }
+    35%, 40% { transform-origin: center bottom; transform: scalex(0.8) scaley(1.4); }
+    70%, 100% { transform-origin: center top; transform: scalex(1) scaley(1); }
+    55% { transform-origin: center top; transform: scalex(1.3) scaley(0.7); }
+}
+@keyframes arjun-hrms-home-loader-squidge-3 {
+    35% { transform-origin: center bottom; transform: scalex(1) scaley(1); }
+    45% { transform-origin: center bottom; transform: scalex(1.3) scaley(0.7); }
+    50%, 55% { transform-origin: center bottom; transform: scalex(0.8) scaley(1.4); }
+    85%, 100% { transform-origin: center top; transform: scalex(1) scaley(1); }
+    70% { transform-origin: center top; transform: scalex(1.3) scaley(0.7); }
+}
+@keyframes arjun-hrms-home-loader-squidge-4 {
+    50% { transform-origin: center bottom; transform: scalex(1) scaley(1); }
+    60% { transform-origin: center bottom; transform: scalex(1.3) scaley(0.7); }
+    65%, 70% { transform-origin: center bottom; transform: scalex(0.8) scaley(1.4); }
+    100% { transform-origin: center top; transform: scalex(1) scaley(1); }
+    85% { transform-origin: center top; transform: scalex(1.3) scaley(0.7); }
 }
 
 /* The "Share with" dialog's user column (frappe/form/templates/set_sharing.html)

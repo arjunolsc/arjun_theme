@@ -1995,15 +1995,22 @@ nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)
     margin-right: 6px;
 }
 .arjun-social-post-body { flex: 1; min-width: 0; }
-.arjun-social-post-head { display: flex; align-items: baseline; gap: 6px; font-size: 13px; }
-.arjun-social-post-head b { color: #0f172a; }
+.arjun-social-post-head { display: flex; align-items: baseline; gap: 6px; font-size: 13px; margin-bottom: 4px; }
+.arjun-social-post-head b { color: #0f172a; font-size: 13.5px; }
 .arjun-social-post-head span { color: #94a3b8; font-size: 11.5px; }
 /* Full post content now (not a 2-line clamp + tiny 48px thumbnail) -
-   this preview shows the whole post, same as the full /social-feed page. */
+   this preview shows the whole post, same as the full /social-feed page.
+   Name+timestamp and the post body were sitting right on top of each
+   other (3px gap, same line-height, similar dark color) and read as one
+   merged block rather than two - a clear gap plus a slightly lighter/
+   looser body makes the split obvious at a glance. */
 .arjun-social-post-text {
     font-size: 13.5px;
-    color: #334155;
-    margin-top: 3px;
+    line-height: 1.5;
+    color: #475569;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid #eef1f5;
     white-space: pre-wrap;
     word-wrap: break-word;
 }

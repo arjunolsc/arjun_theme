@@ -1181,9 +1181,14 @@ span.sidebar-item-label {
 
 /* -------------------------------------------------------------------------- */
 /* PREMIUM GRADIENT CHART OVERRIDES (SPLINES & DOTTED END)                    */
+/* Scoped to .arjun-single-line-chart (set in arjun_theme.js mutate_charts   */
+/* based on the actual number of rendered line-graph-path elements) so a     */
+/* multi-series chart (e.g. Attendance Count: Absent/Present/Leave) keeps    */
+/* its own per-line colors instead of every line collapsing into this one    */
+/* gradient.                                                                  */
 /* -------------------------------------------------------------------------- */
 
-.frappe-chart .line-graph-path {
+.frappe-chart.arjun-single-line-chart .line-graph-path {
     stroke: url(#arjun-gradient) !important;
     stroke-width: 4.5px !important;
     stroke-linecap: round !important;

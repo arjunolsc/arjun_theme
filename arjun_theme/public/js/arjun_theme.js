@@ -1542,6 +1542,18 @@
                     }
                 }
 
+                // The premium gradient/dotted-fade stroke (CSS: .arjun-single-line-chart
+                // .line-graph-path) is a single-line effect - it paints every
+                // .line-graph-path the same gradient, which is fine for a
+                // one-dataset chart but wrongly flattens a multi-series chart
+                // (e.g. Attendance Count's Absent/Present/Leave) into one
+                // color. Gate it on the actual number of rendered line paths,
+                // recomputed on every pass since a chart can redraw with a
+                // different dataset count (e.g. a filter change) without a
+                // page reload.
+                let line_path_count = $(container).find('.line-graph-path').length;
+                $(container).toggleClass('arjun-single-line-chart', line_path_count === 1);
+
                 // The stock "Shift Assignment Breakup" pie chart (Attendance
                 // Dashboard) draws its legend as raw SVG text: frappe-charts
                 // lays legend items out in fixed 150px-wide columns

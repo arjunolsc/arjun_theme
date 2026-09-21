@@ -317,43 +317,15 @@
         const full_name = (frappe.boot.user && frappe.boot.user.full_name) || frappe.session.user_fullname || frappe.session.user;
         const today = frappe.datetime.str_to_user(frappe.datetime.get_today());
 
-        // The HR Admin Dashboard (company-wide HR ops - headcount, today's
-        // attendance, pending approvals, birthdays/anniversaries) is only
-        // useful to - and only readable by - HR/System Manager staff; the
-        // www controller behind /admin-dashboard enforces the same role
-        // check server-side, this just keeps the button from being shown
-        // to people who'd hit a redirect anyway.
-        const can_see_admin_dashboard = frappe.user.has_role(['System Manager', 'HR Manager', 'Administrator']);
-        const admin_btn_html = can_see_admin_dashboard
-            ? '<a href="/admin-dashboard" class="arjun-hrms-dashboard-btn">' +
-                '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="7.5" r="3"/><path d="M3 19c1.2-3.4 3.6-5.1 6-5.1s4.8 1.7 6 5.1" stroke-linecap="round"/><path d="M16 8v4M14 10h4" stroke-linecap="round"/></svg>' +
-                '<span>Admin Dashboard</span>' +
-              '</a>'
-            : '';
-
-        // Same HR/System Manager-only visibility as the Admin Dashboard
-        // button above - the www controller behind /onboarding-dashboard
-        // enforces the same check server-side.
-        const onboarding_btn_html = can_see_admin_dashboard
-            ? '<a href="/onboarding-dashboard" class="arjun-hrms-dashboard-btn">' +
-                '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c1.2-3.6 3.8-5.4 6.5-5.4s5.3 1.8 6.5 5.4" stroke-linecap="round"/><circle cx="17" cy="8.5" r="2.6"/><path d="M15.5 14.8c2.2.3 4 1.9 5 4.9" stroke-linecap="round"/></svg>' +
-                '<span>Onboarding Dashboard</span>' +
-              '</a>'
-            : '';
-
+        // Dashboard links used to live here as buttons (Admin/Onboarding/ESS
+        // Dashboard) - moved to the "Dashboards" left-sidebar workspace so
+        // this banner doesn't have to keep growing as more dashboards are
+        // added (see olscpl_hrms/fixtures/workspace.json).
         const $banner = $(
             '<div id="arjun-hrms-greeting" class="arjun-hrms-greeting">' +
                 '<div class="arjun-hrms-greeting-text">' +
                     '<h2>' + frappe.utils.escape_html(greeting) + ', ' + frappe.utils.escape_html(full_name) + '</h2>' +
                     '<div class="arjun-hrms-greeting-date">' + frappe.utils.escape_html(today) + '</div>' +
-                '</div>' +
-                '<div class="arjun-hrms-greeting-actions">' +
-                    admin_btn_html +
-                    onboarding_btn_html +
-                    '<a href="/ess-dashboard" class="arjun-hrms-dashboard-btn">' +
-                        '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>' +
-                        '<span>Dashboard</span>' +
-                    '</a>' +
                 '</div>' +
             '</div>'
         );

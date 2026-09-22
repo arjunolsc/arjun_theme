@@ -419,6 +419,57 @@ nav.vertical-sidebar {
     z-index: 1030 !important;
 }
 
+/* Om Logistics truck parked at the bottom of the expanded sidebar. Hidden
+   while the sidebar is collapsed to its icon strip. */
+nav.vertical-sidebar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 29px;
+    height: 42px;
+    pointer-events: none;
+    background: url("/assets/arjun_theme/images/om_truck.png") no-repeat center / contain;
+}
+nav.vertical-sidebar.semi-nav:not(:hover)::after {
+    display: none;
+}
+/* Road + town scenery behind the truck. The layers scroll left together so
+   the parked truck looks like it is driving right. The scenery tile is
+   7776px = 216 dash periods of 36px, so one 64.8s cycle (7776px) loops both
+   seamlessly at the same 120px/s. The scenery image is followed by its own
+   mirror image so the tile edges match and nothing is cut off at the seam. */
+nav.vertical-sidebar::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    height: 112px;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, #fff 18px, transparent 18px) 0 calc(100% - 8px) / 36px 3px repeat-x,
+        linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35)) 0 calc(100% - 18px) / 100% 1px no-repeat,
+        linear-gradient(#0c0d10, #0c0d10) 0 100% / 100% 18px no-repeat,
+        url("/assets/arjun_theme/images/om_scenery_loop.png") 0 calc(100% - 18px) / 7776px 91px repeat-x;
+    /* Own compositor layer + a whole 2px per frame at 60fps (120px/s), and
+       the image pre-scaled to its display size, so there is no sub-pixel
+       shimmer or per-frame resampling. */
+    will-change: background-position;
+    transform: translateZ(0);
+    animation: arjun-road-move 64.8s linear infinite;
+}
+@keyframes arjun-road-move {
+    from { background-position: 0 calc(100% - 8px), 0 calc(100% - 18px), 0 100%, 0 calc(100% - 18px); }
+    to   { background-position: -7776px calc(100% - 8px), 0 calc(100% - 18px), 0 100%, -7776px calc(100% - 18px); }
+}
+nav.vertical-sidebar.semi-nav:not(:hover)::before {
+    display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    nav.vertical-sidebar::before { animation: none; }
+}
+
 /* Grid row editor: center in content area, not under sidebar */
 body.arjun-theme-active {
     --sidebar-width: 14rem;
@@ -1668,6 +1719,7 @@ nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)
     padding: 28px 32px;
     border-radius: 12px;
     background: linear-gradient(120deg, #16264f, #2d2f6e 55%, #4a3d8f);
+    overflow: hidden;
 }
 
 .arjun-hrms-greeting h2 {

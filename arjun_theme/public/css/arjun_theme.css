@@ -2487,3 +2487,201 @@ body:has(#arjun-hrms-greeting):not(.arjun-groups-ready) .arjun-hrms-home-loader 
     color: var(--text-muted, #888);
     font-weight: 400;
 }
+
+/* ==========================================================================
+   SIDEBAR PREMIUM POLISH — a pure animation/interaction layer on top of the
+   navy workspace sidebar above (NAVY WORKSPACE SIDEBAR block). Every rule
+   here only touches color transitions, transforms, and pseudo-elements -
+   nothing here adds, removes, or renames a class that arjun_theme.js's
+   click/expand/active-route logic depends on, so none of that JS needed to
+   change. Reuses the same navy/white palette already established above
+   instead of introducing new brand colors.
+   ========================================================================== */
+
+nav.vertical-sidebar {
+    --sidebar-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --sidebar-glow: rgba(94, 138, 255, 0.35);
+    /* Soft edge shadow so the sidebar reads as a raised panel instead of a
+       flat color block butting up against the page content. */
+    box-shadow: 4px 0 24px rgba(6, 12, 40, 0.18);
+}
+
+/* Slim, on-theme scrollbar for the workspace list, and native smooth
+   scrolling for keyboard/anchor jumps - the browser default scrollbar
+   (light grey) looked out of place against the dark navy panel. */
+nav .app-nav {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(142, 161, 224, 0.35) transparent;
+}
+nav .app-nav::-webkit-scrollbar {
+    width: 6px;
+}
+nav .app-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+nav .app-nav::-webkit-scrollbar-thumb {
+    background-color: rgba(142, 161, 224, 0.35);
+    border-radius: 999px;
+}
+nav .app-nav::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(142, 161, 224, 0.55);
+}
+
+/* Quiet hover affordance on the logo tile, since it's a real link back to
+   /app and previously gave no feedback at all. */
+nav.vertical-sidebar .app-logo .logo {
+    transition: filter 0.25s var(--sidebar-ease);
+}
+nav.vertical-sidebar .app-logo .logo:hover {
+    filter: brightness(1.18);
+}
+
+/* Row micro-interaction: replace the flat "all 0.3s ease" transition (still
+   used site-wide elsewhere) with a considered easing curve, and add a
+   quiet rightward nudge + icon scale on hover instead of a color swap alone. */
+nav .app-nav .main-nav>li:not(.menu-title)>a {
+    transition: background-color 0.22s var(--sidebar-ease), color 0.22s var(--sidebar-ease),
+        transform 0.22s var(--sidebar-ease), box-shadow 0.22s var(--sidebar-ease);
+}
+nav .app-nav .main-nav>li:not(.menu-title)>a:hover {
+    transform: translateX(3px);
+}
+nav .app-nav .main-nav>li:not(.menu-title)>a svg,
+nav .app-nav .main-nav>li:not(.menu-title)>a iconify-icon {
+    transition: transform 0.22s var(--sidebar-ease), stroke 0.22s var(--sidebar-ease),
+        color 0.22s var(--sidebar-ease);
+}
+nav .app-nav .main-nav>li:not(.menu-title)>a:hover svg,
+nav .app-nav .main-nav>li:not(.menu-title)>a:hover iconify-icon {
+    transform: scale(1.12);
+}
+/* Collapsed (semi-nav) rail: the translateX nudge above would push the icon
+   half out of the narrow rail, since there's no label text left to absorb
+   the shift - keep the scale, drop the shift, in that state only. */
+nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)>a:hover {
+    transform: none;
+}
+
+/* Active state: a soft glow plus a slim white indicator rail that eases in
+   from the left, instead of the flat fill color switch alone doing all the
+   work of showing "you are here". */
+nav .app-nav .main-nav>li.active>a {
+    box-shadow: 0 4px 14px var(--sidebar-glow), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+nav .app-nav .main-nav>li:not(.menu-title)>a::before {
+    content: "";
+    position: absolute;
+    /* Sits in the <li>'s own 0.5rem side padding, just outside the pill
+       itself, so it reads as a rail against the sidebar's edge rather than
+       a bar cutting into the icon/label. */
+    left: -0.5rem;
+    top: 18%;
+    bottom: 18%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: #ffffff;
+    transform: scaleY(0);
+    transform-origin: center;
+    transition: transform 0.25s var(--sidebar-ease);
+}
+nav .app-nav .main-nav>li.active>a::before {
+    transform: scaleY(1);
+}
+/* No room for a rail sitting outside the icon-only rail itself - hide it
+   in collapsed (semi-nav) mode, same condition every other collapsed-state
+   rule in the NAVY WORKSPACE SIDEBAR block above uses. */
+nav.vertical-sidebar.semi-nav:not(:hover) .app-nav .main-nav>li:not(.menu-title)>a::before {
+    display: none;
+}
+
+/* Child workspace list (Accounting > Payables, etc): was an instant
+   display:none/block snap - same selectors as the base theme's rule above,
+   appended later so it wins the cascade tie without needing !important,
+   swapped for a height+fade transition. arjun_theme.js still only ever
+   toggles the .expanded class; nothing about how it decides to do so
+   changes. 480px comfortably covers every workspace's longest child list
+   (HR/Payroll, ~8 rows) without the reveal noticeably waiting to "catch up"
+   for shorter ones, at this transition's speed. */
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav {
+    display: block;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s var(--sidebar-ease), opacity 0.2s var(--sidebar-ease);
+}
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav.expanded {
+    max-height: 480px;
+    opacity: 1;
+}
+
+/* Child row micro-interaction, matching the parent row's rightward nudge. */
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a:hover {
+    transform: translateX(3px);
+}
+nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li.active>a {
+    box-shadow: 0 3px 10px var(--sidebar-glow);
+}
+
+/* Entrance: a quiet staggered fade+slide for the workspace list on first
+   paint (full page load only - this sidebar is server-rendered once into
+   the app shell and persists across in-app route changes, it does not
+   re-render per navigation, so this never replays while clicking around).
+   Kept short and subtle per the brief - one considered moment, not a
+   per-interaction effect. */
+@keyframes arjun-sidebar-item-in {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+nav .app-nav .main-nav>li {
+    animation: arjun-sidebar-item-in 0.36s var(--sidebar-ease) both;
+}
+nav .app-nav .main-nav>li:nth-child(1) { animation-delay: 0.02s; }
+nav .app-nav .main-nav>li:nth-child(2) { animation-delay: 0.05s; }
+nav .app-nav .main-nav>li:nth-child(3) { animation-delay: 0.08s; }
+nav .app-nav .main-nav>li:nth-child(4) { animation-delay: 0.11s; }
+nav .app-nav .main-nav>li:nth-child(5) { animation-delay: 0.14s; }
+nav .app-nav .main-nav>li:nth-child(6) { animation-delay: 0.17s; }
+nav .app-nav .main-nav>li:nth-child(7) { animation-delay: 0.20s; }
+nav .app-nav .main-nav>li:nth-child(8) { animation-delay: 0.23s; }
+nav .app-nav .main-nav>li:nth-child(9) { animation-delay: 0.26s; }
+nav .app-nav .main-nav>li:nth-child(10) { animation-delay: 0.29s; }
+nav .app-nav .main-nav>li:nth-child(11) { animation-delay: 0.32s; }
+nav .app-nav .main-nav>li:nth-child(12) { animation-delay: 0.35s; }
+nav .app-nav .main-nav>li:nth-child(13) { animation-delay: 0.38s; }
+nav .app-nav .main-nav>li:nth-child(14) { animation-delay: 0.41s; }
+
+/* Keyboard focus: ki_style.css/Frappe don't give these rows a visible
+   focus ring at all, only the mouse-hover/active states above - a dark
+   navy panel with no focus indicator is invisible to keyboard navigation. */
+nav .app-nav .main-nav>li:not(.menu-title)>a:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.65);
+    outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    nav .app-nav .main-nav>li {
+        animation: none;
+    }
+    nav .app-nav .main-nav>li:not(.menu-title)>a,
+    nav .app-nav .main-nav>li:not(.menu-title)>a svg,
+    nav .app-nav .main-nav>li:not(.menu-title)>a iconify-icon,
+    nav .app-nav .main-nav>li:not(.menu-title)>a::before,
+    nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav,
+    nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a,
+    nav.vertical-sidebar .app-logo .logo {
+        transition: none;
+    }
+    nav .app-nav .main-nav>li:not(.menu-title)>a:hover,
+    nav .app-nav .main-nav>li:not(.menu-title)>a:hover svg,
+    nav .app-nav .main-nav>li:not(.menu-title)>a:hover iconify-icon,
+    nav .app-nav .main-nav>li:not(.menu-title) ul.sidebar-child-nav>li>a:hover {
+        transform: none;
+    }
+}

@@ -355,6 +355,19 @@
             $('#arjun-hrms-home-loader').remove();
             return;
         }
+        // The global page-transition loader (.arjun-page-loader, a
+        // full-viewport overlay) is already covering the whole screen for
+        // a fresh navigation into Hrms Home - see the 'page-change'
+        // handler below. Adding this second, differently-shaped loader
+        // underneath it would just mean the moment the global one hides,
+        // this one is revealed instead of the real content, i.e. the same
+        // stacked-loaders flash this is meant to prevent. Only needed for
+        // an in-place re-render while already on Hrms Home, where the
+        // global loader was never shown.
+        if (document.body.classList.contains('arjun-page-loading')) {
+            $('#arjun-hrms-home-loader').remove();
+            return;
+        }
         if ($('#arjun-hrms-home-loader').length) return;
 
         const $wrapper = $('.layout-main-section-wrapper').first();
@@ -518,6 +531,7 @@
     arjun_theme._maybe_reveal_workspace = function () {
         if (arjun_theme._split_done && arjun_theme._groups_done && arjun_theme._widget_done) {
             document.body.classList.add('arjun-groups-ready');
+            arjun_theme.hide_page_loader();
         }
     };
 
@@ -538,6 +552,7 @@
             arjun_theme._reveal_failsafe_scheduled = true;
             setTimeout(function () {
                 document.body.classList.add('arjun-groups-ready');
+                arjun_theme.hide_page_loader();
             }, 6000);
         }
 
@@ -1594,8 +1609,13 @@
         // Failsafe - if 'page-change' never actually fires for some reason
         // (a route that bails out early, a non-navigation "route" call,
         // etc.) don't leave the whole app stuck behind the loader forever.
+        // Longer than Hrms Home's own 6000ms reveal failsafe (see
+        // _maybe_reveal_workspace/setup_explore_social_split above) so
+        // that one always gets to hide this loader first on a slow load -
+        // otherwise this timer would hide it a couple seconds early,
+        // exposing the still-loading workspace underneath for a beat.
         clearTimeout(arjun_theme._page_loader_hide_timer);
-        arjun_theme._page_loader_hide_timer = setTimeout(arjun_theme.hide_page_loader, 4000);
+        arjun_theme._page_loader_hide_timer = setTimeout(arjun_theme.hide_page_loader, 7000);
     };
 
     arjun_theme.hide_page_loader = function () {
@@ -1616,9 +1636,27 @@
         };
     })();
 
-    const observer = new MutationObserver(() => {
-        arjun_theme.run_patches();
-    });
+    // run_patches() runs ~15 DOM-patching functions (highlight_active_route,
+    // mutate_workspace_container, setup_hrms_home_loader, ...) end to end.
+    // editorjs inserts a workspace's blocks one at a time, each in its own
+    // mutation burst - switching workspaces was measured at 70+ separate
+    // MutationObserver callbacks, each running the full patch set, adding
+    // up to several hundred ms of real work on top of whatever the browser
+    // itself needed for that navigation. Coalescing every mutation inside
+    // the same animation frame into a single run_patches() call keeps every
+    // function idempotent and correct (same eventual DOM state, same last-
+    // write-wins outcome) while cutting that repeat work down to roughly
+    // one call per rendered frame instead of one per DOM burst.
+    let patches_scheduled = false;
+    const schedule_patches = () => {
+        if (patches_scheduled) return;
+        patches_scheduled = true;
+        requestAnimationFrame(() => {
+            patches_scheduled = false;
+            arjun_theme.run_patches();
+        });
+    };
+    const observer = new MutationObserver(schedule_patches);
 
     $(document).ready(() => {
         arjun_theme.setup();
@@ -1627,6 +1665,13 @@
     });
 
     $(document).on('app_ready page-change', function () {
+        // Always hide the full-viewport loader right away, on every route
+        // including Hrms Home - it covers the sidebar as well as the
+        // content area, so keeping it up any longer than a normal route
+        // change reads as the whole page reloading instead of just the
+        // inner section, which is worse than the brief native-skeleton
+        // flash it was trying to avoid (see setup_hrms_home_loader below,
+        // which still covers just the content area on its own).
         arjun_theme.hide_page_loader();
         arjun_theme.run_patches();
         arjun_theme.mutate_charts();

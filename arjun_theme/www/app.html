@@ -26,6 +26,18 @@
     <script type="text/javascript">
         window._version_number = "{{ build_version }}";
         window.app = true;
+        // Missing here (unlike Frappe's own www/app.html, which this file
+        // otherwise replaces) - without it, frappe/public/js/frappe/
+        // socketio_client.js's get_host() silently connects to this same
+        // origin's port instead of frappe.boot.socketio_port, so every
+        // realtime connection permanently fails and retries (visible as
+        // repeated "Error connecting to socket.io: xhr poll error" in the
+        // console) - it never gives up, since desk.js's frappe.realtime.init()
+        // effectively runs again on navigation, each with a fresh retry
+        // budget. Cards/widgets waiting on a realtime event for their data
+        // can be left stuck on their loading skeleton indefinitely as a
+        // result.
+        window.dev_server = {{ dev_server }};
 
         if (!window.frappe) window.frappe = {};
 

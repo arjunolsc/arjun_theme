@@ -8,6 +8,15 @@
     // route change (router.js, page.js) funnels through, so overriding it
     // here covers the whole Desk rather than patching each call site.
     arjun_theme.FIXED_TAB_TITLE = "OM HRMS";
+
+    // The home workspace's rendered title. Its internal name/route stay
+    // "Hrms Home" (/app/hrms-home); the displayed title is now "Atlas Home".
+    // Matching only the old text silently turned off this theme's home
+    // layout (custom cards, Social widget, loader) when the title changed.
+    arjun_theme.HOME_TITLES = ["Atlas Home", "Hrms Home"];
+    arjun_theme.is_home_title = function (text) {
+        return arjun_theme.HOME_TITLES.includes(text);
+    };
     frappe.utils.set_title = function () {
         document.title = arjun_theme.FIXED_TAB_TITLE;
     };
@@ -245,7 +254,7 @@
     // hide again) instead of leaving stale content exposed.
     arjun_theme._resync_hrms_home_ready_flags = function () {
         const $title = $('.title-area .title-text:visible').first();
-        if (!$title.length || $title.text().trim() !== 'Hrms Home') return;
+        if (!$title.length || !arjun_theme.is_home_title($title.text().trim())) return;
 
         let stale = false;
         if (arjun_theme._split_done && !$('.arjun-explore-social-split').length) {
@@ -290,7 +299,7 @@
         // title instead of the one actually on screen, fail the "Hrms
         // Home" check below, and rip out an already-correct banner.
         const $title = $('.title-area .title-text:visible').first();
-        if (!$title.length || $title.text().trim() !== 'Hrms Home') {
+        if (!$title.length || !arjun_theme.is_home_title($title.text().trim())) {
             $('#arjun-hrms-greeting').remove();
             // document.body is reused across Frappe's SPA route changes -
             // reset this so the hide-until-ready CSS (scoped to
@@ -351,7 +360,7 @@
     // sitting still. Fixed positioning is immune to both.
     arjun_theme.setup_hrms_home_loader = function () {
         const $title = $('.title-area .title-text:visible').first();
-        if (!$title.length || $title.text().trim() !== 'Hrms Home') {
+        if (!$title.length || !arjun_theme.is_home_title($title.text().trim())) {
             $('#arjun-hrms-home-loader').remove();
             return;
         }
@@ -537,7 +546,7 @@
 
     arjun_theme.setup_explore_social_split = function () {
         const $title = $('.title-area .title-text:visible').first();
-        if (!$title.length || $title.text().trim() !== 'Hrms Home') return;
+        if (!$title.length || !arjun_theme.is_home_title($title.text().trim())) return;
         if ($('.arjun-explore-social-split').length) return; // already split this render
         if ($('.skeleton-card').length > 0) return; // still loading - try again next patch cycle
 
@@ -618,7 +627,7 @@
 
     arjun_theme.setup_social_feed_widget = function () {
         const $title = $('.title-area .title-text:visible').first();
-        if (!$title.length || $title.text().trim() !== 'Hrms Home') {
+        if (!$title.length || !arjun_theme.is_home_title($title.text().trim())) {
             $('#arjun-social-widget').remove();
             $('.arjun-social-heading').remove();
             return;
@@ -693,7 +702,7 @@
             '<div class="arjun-social-composer-row">' +
             arjun_theme._social_avatar_html(s.me, 38) +
             '<div class="arjun-social-composer-main">' +
-            '<div class="arjun-social-composer-trigger" id="arjun-social-composer-trigger">What’s up on your mind...</div>' +
+            '<div class="arjun-social-composer-trigger" id="arjun-social-composer-trigger">What’s on your mind ?</div>' +
             '<div class="arjun-social-composer-footer">' +
             '<div class="arjun-social-tools">' +
             '<button type="button" class="arjun-social-tool-btn" id="arjun-social-emoji-btn" title="Emoji">' + arjun_theme.SOCIAL_ICONS.emoji + '</button>' +
@@ -917,7 +926,7 @@
         // Editor control itself has no `placeholder` df property.
         const contentField = dialog.fields_dict.content;
         if (contentField && contentField.quill) {
-            contentField.quill.root.setAttribute('data-placeholder', "What’s up on your mind...");
+            contentField.quill.root.setAttribute('data-placeholder', "What’s on your mind ?");
         }
 
         arjun_theme._render_compose_upload_region(dialog, cs);
@@ -1223,7 +1232,7 @@
     arjun_theme.setup_widget_card_collapse = function () {
         // Same stale-hidden-page hazard as inject_hrms_home_greeting() above.
         const $title = $('.title-area .title-text:visible').first();
-        if (!$title.length || $title.text().trim() !== 'Hrms Home') return;
+        if (!$title.length || !arjun_theme.is_home_title($title.text().trim())) return;
 
         const $sectionHeading = $('.editor-js-container .codex-editor__redactor > .ce-block').filter(function () {
             return $(this).find('.ce-header').length && $(this).text().trim() === 'Reports & Masters';

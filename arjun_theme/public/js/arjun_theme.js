@@ -9,13 +9,20 @@
     // here covers the whole Desk rather than patching each call site.
     arjun_theme.FIXED_TAB_TITLE = "OM HRMS";
 
-    // The home workspace's rendered title. Its internal name/route stay
-    // "Hrms Home" (/app/hrms-home); the displayed title is now "Atlas Home".
-    // Matching only the old text silently turned off this theme's home
-    // layout (custom cards, Social widget, loader) when the title changed.
+    // The home workspace's rendered title - "Atlas Home" (/app/atlas-home),
+    // "Hrms Home" before it was renamed. Matching only one text silently
+    // turns off this theme's home layout (custom cards, Social widget,
+    // loader) when the title changes.
     arjun_theme.HOME_TITLES = ["Atlas Home", "Hrms Home"];
     arjun_theme.is_home_title = function (text) {
         return arjun_theme.HOME_TITLES.includes(text);
+    };
+    // Old /app/hrms-home links and bookmarks (the workspace was renamed to
+    // Atlas Home) - open it instead of "Page hrms-home not found".
+    const convert_to_standard_route = frappe.router.convert_to_standard_route;
+    frappe.router.convert_to_standard_route = function (route) {
+        if (route[0] === "hrms-home") route = ["atlas-home"].concat(route.slice(1));
+        return convert_to_standard_route.call(this, route);
     };
     frappe.utils.set_title = function () {
         document.title = arjun_theme.FIXED_TAB_TITLE;

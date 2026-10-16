@@ -90,8 +90,9 @@ h6,
 /* 3. NAVBAR OVERRIDE                                                         */
 /* -------------------------------------------------------------------------- */
 .navbar {
-    background-color: var(--np-surface) !important;
-    border-bottom: 1px solid var(--np-border) !important;
+    /* navy like the Desk bar - the OM One logo's "one" is white and vanished on white */
+    background: linear-gradient(90deg, rgb(16, 34, 95) 0%, rgb(23, 46, 122) 100%) !important;
+    border-bottom: 0 !important;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03) !important;
     padding: 0 24px !important;
     min-height: var(--np-navbar-height) !important;
@@ -113,8 +114,14 @@ h6,
     max-height: 36px !important;
 }
 
+.navbar .navbar-toggler,
+.navbar .navbar-toggler svg {
+    color: #fff !important;
+    stroke: #fff !important;
+}
+
 .navbar .nav-link {
-    color: var(--np-text) !important;
+    color: rgba(255, 255, 255, 0.88) !important;
     font-weight: 500 !important;
     font-size: 14px !important;
     padding: 8px 16px !important;
@@ -123,8 +130,8 @@ h6,
 }
 
 .navbar .nav-link:hover {
-    color: var(--np-primary) !important;
-    background-color: var(--np-primary-light) !important;
+    color: #fff !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Navbar user avatar / login area */
